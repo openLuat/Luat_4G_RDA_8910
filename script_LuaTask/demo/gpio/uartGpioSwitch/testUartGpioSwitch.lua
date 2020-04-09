@@ -18,7 +18,7 @@ local uartid,uartuse = 2,true
 返回值：无
 ]]
 local function uartopn()
-    uart.setup(uartid,115200,8,uart.PAR_NONE,uart.STOP_1)    
+    uart.setup(uartid,115200,8,uart.PAR_NONE,uart.STOP_1)
 end
 
 --[[
@@ -41,8 +41,8 @@ local function switchtouart()
     log.info("switchtouart",uartuse)
     if not uartuse then
         --关闭gpio功能
-        pins.close(pio.P1_25)
-        pins.close(pio.P1_26)
+        pins.close(pio.P0_20)
+        pins.close(pio.P0_21)
         --打开uart功能
         uartopn()
         uartuse = true
@@ -60,10 +60,10 @@ local function switchtogpio()
     if uartuse then
         --关闭uart功能
         uartclose()
-        pins.setup(pio.P1_25,1)
-        pins.setup(pio.P1_26,0)
+        pins.setup(pio.P0_20,1)
+        pins.setup(pio.P0_21,0)
         uartuse = false
-    end    
+    end
 end
 
 --[[

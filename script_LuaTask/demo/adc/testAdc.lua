@@ -11,53 +11,41 @@ module(...,package.seeall)
 
 --- ADC读取测试
 -- @return 无
--- @usage read()
-local function read()
+-- @usage read2()
+local function read2()
     --ADC1接口用来读取电压
-    local ADC_ID = 1
+    local ADC_ID = 2
     -- 读取adc
     -- adcval为number类型，表示adc的原始值，无效值为0xFFFF
     -- voltval为number类型，表示转换后的电压值，单位为毫伏，无效值为0xFFFF；adc.read接口返回的voltval放大了3倍，所以需要除以3还原成原始电压
 
-    -- adc1读取量程为0-1400mV
-
     local adcval,voltval = adc.read(ADC_ID)
-    log.info("testAdc1.read",adcval,(voltval-(voltval%3))/3,voltval)
+    log.info("testAdc2.read",adcval,(voltval-(voltval%3))/3,voltval)
 end
 
 --- ADC读取测试
 -- @return 无
--- @usage read()
-local function read0()
-    --ADC0接口用来读取电压
-    local ADC_ID = 0
+-- @usage read3()
+local function read3()
+    --ADC1接口用来读取电压
+    local ADC_ID = 3
     -- 读取adc
     -- adcval为number类型，表示adc的原始值，无效值为0xFFFF
     -- voltval为number类型，表示转换后的电压值，单位为毫伏，无效值为0xFFFF；adc.read接口返回的voltval放大了3倍，所以需要除以3还原成原始电压
 
-    -- adc0的值经过了电阻分压，输入模块的端口为BAT_ADC_IN，如下图：
-    --
-    -- BAT_ADC_IN ----R1(100K)------+------------------ADC0
-    --                              |
-    --                              |
-    --                           R2(47K)
-    --                              |
-    --                              |
-    --                             GND
-    --
-    -- 依据公式：Vadc0 = Vbat x R2/(R1+R2)
-    -- Vbat = Vadc0/(R2/(R1+R2)) = Vadc0*(R1+R2)/R2 ≈ Vadc0 * 3127 / 1000
-
     local adcval,voltval = adc.read(ADC_ID)
-    log.info("testAdc0.read",adcval,(voltval-(voltval%3))/3,voltval)
-    -- 输出计算得出的原始电压值
-    log.info("testAdc0.Vbat",voltval/3 * 3127 / 1000)
+    log.info("testAdc3.read",adcval,(voltval-(voltval%3))/3,voltval)
 end
 
 -- 开启对应的adc通道
-adc.open(0)
-adc.open(1)
+adc.open(2)
+adc.open(3)
 
 -- 定时每秒读取adc值
-sys.timerLoopStart(read,1000)
-sys.timerLoopStart(read0,1000)
+sys.timerLoopStart(read2,1000)
+sys.timerLoopStart(read3,1000)
+
+require"misc"
+sys.timerLoopStart(function ()
+    log.info("vbatt.read",misc.getVbatt())
+end,1000)

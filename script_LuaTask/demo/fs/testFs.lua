@@ -18,20 +18,20 @@ local USER_DIR_PATH = "/user_dir"
     参数：文件名
     返回值：无                     ]]
 local function readfile(filename)--打开指定文件并输出内容
-    
+
     local filehandle=io.open(filename,"r")--第一个参数是文件名，第二个是打开方式，'r'读模式,'w'写模式，对数据进行覆盖,'a'附加模式,'b'加在模式后面表示以二进制形式打开
     if filehandle then          --判断文件是否存在
         local fileval=filehandle:read("*all")--读出文件内容
       if  fileval  then
            print(fileval)  --如果文件存在，打印文件内容
            filehandle:close()--关闭文件
-      else 
+      else
            print("文件为空")--文件不存在
       end
-    else 
-        print("文件不存在或文件输入格式不正确") --打开失败  
-    end 
-    
+    else
+        print("文件不存在或文件输入格式不正确") --打开失败
+    end
+
 end
 
 
@@ -47,7 +47,7 @@ local function writevala(filename,value)--在指定文件中添加内容,函数�
         filehandle:write(value)--写入要写入的内容
         filehandle:close()
     else
-        print("文件不存在或文件输入格式不正确") --打开失败  
+        print("文件不存在或文件输入格式不正确") --打开失败
     end
 end
 
@@ -64,7 +64,7 @@ local function writevalw(filename,value)--在指定文件中添加内容
         filehandle:write(value)--写入要写入的内容
         filehandle:close()
     else
-        print("文件不存在或文件输入格式不正确") --打开失败  
+        print("文件不存在或文件输入格式不正确") --打开失败
     end
 end
 
@@ -81,14 +81,21 @@ end
 print("get_fs_free_size: "..rtos.get_fs_free_size().." Bytes")
 --成功创建一个目录(目录已存在，也返回true表示创建成功)
 if rtos.make_dir(USER_DIR_PATH) then
+    log.info("testFs.readfile")
     readfile(USER_DIR_PATH.."/3.txt")
 
+    log.info("testFs.writevala")
     writevala(USER_DIR_PATH.."/3.txt","great")
 
+    log.info("testFs.readfile")
     readfile(USER_DIR_PATH.."/3.txt")
+    log.info("testFs.writevalw")
     writevalw(USER_DIR_PATH.."/3.txt","great")
+    log.info("testFs.readfile")
     readfile(USER_DIR_PATH.."/3.txt")
 
+    log.info("testFs.deletefile")
     deletefile(USER_DIR_PATH.."/3.txt")
+    log.info("testFs.readfile")
     readfile(USER_DIR_PATH.."/3.txt")
 end

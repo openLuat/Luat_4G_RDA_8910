@@ -44,4 +44,5 @@ uart.setup(uart.USB, 0, 0, uart.PAR_NONE, uart.STOP_1)
 
 uart.on(uart.USB, "receive", usbreader)
 
-sys.timerLoopStart(log.info,5000,"testUpdate.version",rtos.get_version(),_G.VERSION)
+--1分钟后，关闭usb data功能，切换为usb at功能
+sys.timerStart(uart.close,60000,uart.USB)

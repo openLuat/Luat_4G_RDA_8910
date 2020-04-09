@@ -10,27 +10,27 @@ module(...,package.seeall)
 require"pins"
 
 local level = 0
---GPIO79配置为输出，默认输出低电平，可通过setGpio79Fnc(0或者1)设置输出电平
-local setGpio79Fnc = pins.setup(pio.P2_15,0)
+--GPIO18配置为输出，默认输出低电平，可通过setGpio18Fnc(0或者1)设置输出电平
+local setGpio18Fnc = pins.setup(pio.P0_18,0)
 sys.timerLoopStart(function()
     level = level==0 and 1 or 0
-    setGpio79Fnc(level)
-    log.info("testGpioSingle.setGpio79Fnc",level)
+    setGpio18Fnc(level)
+    log.info("testGpioSingle.setGpio18Fnc",level)
 end,1000)
 
---GPIO53配置为输入，可通过getGpio53Fnc()获取输入电平
-local getGpio53Fnc = pins.setup(pio.P1_21)
+--GPIO19配置为输入，可通过getGpio19Fnc()获取输入电平
+local getGpio19Fnc = pins.setup(pio.P0_19)
 sys.timerLoopStart(function()
-    log.info("testGpioSingle.getGpio53Fnc",getGpio53Fnc())
+    log.info("testGpioSingle.getGpio19Fnc",getGpio19Fnc())
 end,1000)
---pio.pin.setpull(pio.PULLUP,pio.P1_21)  --配置为上拉
---pio.pin.setpull(pio.PULLDOWN,pio.P1_21)  --配置为下拉
---pio.pin.setpull(pio.NOPULL,pio.P1_21)  --不配置上下拉
+--pio.pin.setpull(pio.PULLUP,pio.P0_19)  --配置为上拉
+--pio.pin.setpull(pio.PULLDOWN,pio.P0_19)  --配置为下拉
+--pio.pin.setpull(pio.NOPULL,pio.P0_19)  --不配置上下拉
 
 
 
-function gpio54IntFnc(msg)
-    log.info("testGpioSingle.gpio54IntFnc",msg,getGpio54Fnc())
+function gpio13IntFnc(msg)
+    log.info("testGpioSingle.gpio13IntFnc",msg,getGpio13Fnc())
     --上升沿中断
     if msg==cpu.INT_GPIO_POSEDGE then
     --下降沿中断
@@ -38,11 +38,12 @@ function gpio54IntFnc(msg)
     end
 end
 
---GPIO54配置为中断，可通过getGpio54Fnc()获取输入电平，产生中断时，自动执行gpio54IntFnc函数
-getGpio54Fnc = pins.setup(pio.P1_22,gpio54IntFnc)
+--GPIO13配置为中断，可通过getGpio13Fnc()获取输入电平，产生中断时，自动执行gpio13IntFnc函数
+getGpio13Fnc = pins.setup(pio.P0_13,gpio13IntFnc)
 
 --[[
-pmd.ldoset(x,pmd.VLDO6)
+pmd.ldoset(x,pmd.LDO_VMMC) -- GPIO 25、26、27、28、29、30
+pmd.ldoset(x,pmd.LDO_VLCD) -- GPIO 39、40、41、42、56、57、58
 x=0时：关闭LDO
 x=1时：LDO输出1.8V
 x=2时：LDO输出1.9V

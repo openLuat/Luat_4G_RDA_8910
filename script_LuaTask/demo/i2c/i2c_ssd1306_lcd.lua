@@ -107,7 +107,11 @@ local function i2cShow()
     i2c.send(i2cid,i2cslaveaddr,0x20)
     --读取从设备i2cslaveaddr寄存器内的1个字节的数据，并且打印出来
     log.info("zwb_Lua 0x20 recv",string.toHex(i2c.recv(i2cid,i2cslaveaddr,1)))
+
+    i2c.close(i2cid)
 end
 
 --显示内容
-i2cShow()
+sys.timerLoopStart(function ()
+    i2cShow()
+end, 3000)
