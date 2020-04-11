@@ -1,4 +1,4 @@
---- 模块功能：串口功能测试(非TASK版，串口帧有自定义的结构)
+--- 模块功能：串口3功能测试
 -- @author openLuat
 -- @module uart.testUartTask
 -- @license MIT
@@ -10,11 +10,11 @@ module(...,package.seeall)
 require"utils"
 require"pm"
 
-local uartID = 1
+local uartID = 3
 
 sys.taskInit(
     function()                
-        local fileHandle = io.open("/ldata/mcu101.bin","rb")
+        local fileHandle = io.open("/lua/mcu101.bin","rb")
         if not fileHandle then
             log.error("testALiYun.otaCb1 open file error")
             return

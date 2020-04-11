@@ -16,7 +16,6 @@ LOG_LEVEL = log.LOGLEVEL_TRACE
 ]]
 --log.openTrace(true,1,115200)
 require "sys"
-require "httpv2"
 require "net"
 require "pins"
 require "common"
@@ -31,14 +30,14 @@ net.startQueryAll(60000, 60000)
 --使用说明参考demo/console下的《console功能使用说明.docx》
 require "misc"
 require "console"
-require "gpsv2"
-console.setup(2, 115200)
+console.setup(1, 115200)
 
 
 --加载网络指示灯和LTE指示灯功能模块
 --根据自己的项目需求和硬件配置决定：1、是否加载此功能模块；2、配置指示灯引脚
 --合宙官方出售的Air720U开发板上的网络指示灯引脚为pio.P0_1，LTE指示灯引脚为pio.P0_4
 require "netLed"
+pmd.ldoset(2,pmd.LDO_VLCD)
 netLed.setup(true,pio.P0_1,pio.P0_4)
 --网络指示灯功能模块中，默认配置了各种工作状态下指示灯的闪烁规律，参考netLed.lua中ledBlinkTime配置的默认值
 --如果默认值满足不了需求，此处调用netLed.updateBlinkTime去配置闪烁时长

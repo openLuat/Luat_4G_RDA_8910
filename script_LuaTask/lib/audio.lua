@@ -44,10 +44,6 @@ local audioQueue = {}
 --sStrategy：优先级相同时的播放策略，0(表示继续播放正在播放的音频，忽略请求播放的新音频)，1(表示停止正在播放的音频，播放请求播放的新音频)
 local sStrategy
 
-local function isTtsApi()
-    return tonumber((rtos.get_version()):match("Luat_V(%d+)_"))>=29
-end
-
 local function handleCb(item,result)
     log.info("audio.handleCb",item.cbFnc,result)
     if item.cbFnc then item.cbFnc(result) end
@@ -88,6 +84,8 @@ local function handlePlayInd(item,key,value)
         handleCb(item,5)
     end 
 end
+
+local ttsEngineInited
 
 local function audioTask()    
     while true do
@@ -135,55 +133,38 @@ local function audioTask()
                 handleCb(item,behind.type=="STOP" and 5 or 4)
             else
                 setVolume(item.vol)
-                if isTtsApi() and item.type=="TTS" then
-                    audiocore.openTTS(ttsSpeed)
-                    sys.waitUntil("LIB_AUDIO_TTS_OPEN_RESULT")
+                if item.type=="TTS" then
+                    if not ttsEngineInited then
+                        ttsply.initEngine()
+                        ttsEngineInited = true
+                    end
+                    ttsply.setParm(1,ttsSpeed)
                     --队列中有优先级高的请求等待处理
                     if #audioQueue>1 then
                         log.warn("audioTask",item.type,"priority low1")
-                        audiocore.closeTTS()
-                        sys.waitUntil("LIB_AUDIO_TTS_CLOSE_RESULT")
+                        ttsply.stop()
+                        sys.waitUntil("LIB_AUDIO_PLAY_IND",500)
                         local behind = audioQueue[2]
                         handleCb(item,behind.type=="STOP" and 5 or 4)
                     else
-                        audiocore.playTTS(common.utf8ToUcs2(item.path))
+                        ttsply.play(common.utf8ToGb2312(item.path))
                         
                         --等待三种消息（播放结束、主动调用audio.stop、新的优先级更高的播放请求）
                         log.info("audioTask",item.type,"wait LIB_AUDIO_PLAY_IND")
                         local _,key,value = sys.waitUntil("LIB_AUDIO_PLAY_IND")
                         log.info("audioTask",item.type,"recv LIB_AUDIO_PLAY_IND",key,value)
                         
-                        if isTtsApi() and item.type=="TTS" then
-                            audiocore.stopTTS()
-                            sys.waitUntil("LIB_AUDIO_TTS_STOP_RESULT")
-                            audiocore.closeTTS()
-                            sys.waitUntil("LIB_AUDIO_TTS_CLOSE_RESULT")
+                        if item.type=="TTS" then
+                            ttsply.stop()
+                            sys.waitUntil("LIB_AUDIO_PLAY_IND",500)
                         else
-                            req("AT+QTTS=3")
-                            sys.waitUntil("LIB_AUDIO_TTS_STOP_RESULT")
+                            
                         end
                         
                         handlePlayInd(item,key,value)
                     end
                 else
-                    req("AT+QTTS=1") req(string.format("AT+QTTS=%d,\"%s\"",item.type=="TTS" and 2 or 4,string.toHex(common.utf8ToUcs2(item.path))))
                     
-                    --等待三种消息（播放结束、主动调用audio.stop、新的优先级更高的播放请求）
-                    log.info("audioTask",item.type,"wait LIB_AUDIO_PLAY_IND")
-                    local _,key,value = sys.waitUntil("LIB_AUDIO_PLAY_IND")
-                    log.info("audioTask",item.type,"recv LIB_AUDIO_PLAY_IND",key,value)
-                    
-                    if isTtsApi() and item.type=="TTS" then
-                        audiocore.stopTTS()
-                        sys.waitUntil("LIB_AUDIO_TTS_STOP_RESULT")
-                        audiocore.closeTTS()
-                        sys.waitUntil("LIB_AUDIO_TTS_CLOSE_RESULT")
-                    else
-                        req("AT+QTTS=3")
-                        sys.waitUntil("LIB_AUDIO_TTS_STOP_RESULT")
-                    end
-                    
-                    handlePlayInd(item,key,value)
                 end         
             end
         elseif item.type=="RECORD" then
@@ -285,71 +266,14 @@ function stop(cbFnc)
     end    
 end
 
---[[
-函数名：urc
-功能  ：本功能模块内“注册的底层core通过虚拟串口主动上报的通知”的处理
-参数  ：
-		data：通知的完整字符串信息
-		prefix：通知的前缀
-返回值：无
-]]
-local function urc(data,prefix)
-    if prefix == "+QTTS" then
-        local flag = string.match(data,": *(%d)",string.len(prefix)+1)
-        --停止播放tts
-        if flag=="0" --[[or flag == "1"]] then
-            sys.publish("LIB_AUDIO_PLAY_IND","RESULT",true)
-        end
-    end
-end
-
---[[
-函数名：rsp
-功能  ：本功能模块内“通过虚拟串口发送到底层core软件的AT命令”的应答处理
-参数  ：
-		cmd：此应答对应的AT命令
-		success：AT命令执行结果，true或者false
-		response：AT命令的应答中的执行结果字符串
-		intermediate：AT命令的应答中的中间信息
-返回值：无
-]]
-local function rsp(cmd,success,response,intermediate)
-    local prefix = string.match(cmd,"AT(%+%u+%?*)")
-
-    if prefix == "+QTTS" then
-        local action = string.match(cmd,"QTTS=(%d)")
-        if not success then
-            if action=="1" or action=="2" then
-                sys.publish("LIB_AUDIO_PLAY_IND",result,false)
-            end
-        end
-        if --[[action=="0" or]] action=="3" then
-            sys.publish("LIB_AUDIO_TTS_STOP_RESULT")
-        end
-    end
-end
-
-ril.regUrc("+QTTS",urc)
-ril.regRsp("+QTTS",rsp,0)
-
 local function audioMsg(msg)
     sys.publish("LIB_AUDIO_PLAY_IND","RESULT",msg.play_end_ind)
 end
 
-local function ttsMsg(msg)
-    log.info("audio.ttsMsg",msg.type,msg.result)
-    local tag = {[0]="CLOSE", [1]="OPEN", [2]="PLAY", [3]="STOP"}
-    if msg.type==2 then
-        sys.publish("LIB_AUDIO_PLAY_IND","RESULT",msg.result)
-    else
-        if tag[msg.type] then sys.publish("LIB_AUDIO_TTS_"..tag[msg.type].."_RESULT") end
-    end
-end
 --注册core上报的rtos.MSG_AUDIO消息的处理函数
 rtos.on(rtos.MSG_AUDIO,audioMsg)
-if isTtsApi() then
-    rtos.on(rtos.MSG_TTS,ttsMsg)
-end
+rtos.on(rtos.MSG_TTSPLY_STATUS, function() log.info("rtos.MSG_TTSPLY_STATUS") sys.publish("LIB_AUDIO_PLAY_IND","RESULT",true) end)
+rtos.on(rtos.MSG_TTSPLY_ERROR, function() log.info("rtos.MSG_TTSPLY_ERROR") sys.publish("LIB_AUDIO_PLAY_IND","RESULT",false) end)
 
 --- 设置喇叭音量等级
 -- @number vol，音量值为0-7，0为静音

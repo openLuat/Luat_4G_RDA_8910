@@ -134,8 +134,7 @@ end
 -- @usage setup(true,pio.P0_1,pio.P0_4)表示打开网络指示灯和LTE指示灯功能，GPIO1控制网络指示灯，GPIO4控制LTE指示灯
 -- @usage setup(false)表示关闭网络指示灯和LTE指示灯功能
 function setup(flag,ledPin,ltePin)
-    --log.info("netLed.setup",flag,pin,ledSwitch)
-    pmd.ldoset(2,pmd.LDO_VLCD)
+    --log.info("netLed.setup",flag,pin,ledSwitch)    
     local oldSwitch = ledSwitch
     if flag~=ledSwitch then
         ledSwitch = flag

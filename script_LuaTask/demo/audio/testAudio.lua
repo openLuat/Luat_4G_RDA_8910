@@ -40,7 +40,7 @@ end
 --播放tts测试接口，每次打开一行代码进行测试
 --audio.play接口要求TTS数据为UTF8编码，因为本文件编辑时采用的是UTF8编码，所以可以直接使用ttsStr，不用做编码转换
 --如果用户自己编辑脚本时，采用的不是UTF8编码，需要调用common.XXX2utf8接口进行转换
-local ttsStr = "TTS测试"
+local ttsStr = "上海合宙通信科技有限公司欢迎您"
 local function testPlayTts()
     --单次播放，默认音量等级
     --audio.play(TTS,"TTS",ttsStr)

@@ -1,9 +1,23 @@
---- 模块功能：串口功能测试(非TASK版，串口帧有自定义的结构)
+--- 模块功能：串口2功能测试
 -- @author openLuat
 -- @module uart.testUartTask
 -- @license MIT
 -- @copyright openLuat
 -- @release 2018.05.24
+
+--[[
+注意：UART2 在开机后会自动打印一段log，波特率921600，这段log不能通过修改软件来关闭，推荐优先使用UART1和UART3
+UART2打印的Log如下：
+RDA8910m Boot_ROM V1.0-17b887ec
+HW_CFG: 36
+SW_CFG: 0
+SE_CFG: 0
+check flash img
+load complete! checking......
+Security Disabled
+Check uImage Done
+Run ...
+]]
 
 module(...,package.seeall)
 
@@ -29,8 +43,7 @@ local function taskRead()
     local cacheData,frameCnt = "",0
     while true do
         local s = uart.read(UART_ID,"*l")
-        if s == "" then
-            uart.on(UART_ID,"receive",function() sys.publish("UART_RECEIVE") end)
+        if s == "" then            
             if not sys.waitUntil("UART_RECEIVE",100) then
                 --uart接收数据，如果100毫秒没有收到数据，则打印出来所有已收到的数据，清空数据缓冲区，等待下次数据接收
                 --注意：
@@ -46,7 +59,6 @@ local function taskRead()
                     write("received "..frameCnt.." frame")
                 end
             end
-            uart.on(UART_ID,"receive")
         else
             cacheData = cacheData..s            
         end
@@ -75,6 +87,7 @@ end
 pm.wake("testUartTask")
 --注册串口的数据发送通知函数
 uart.on(UART_ID,"sent",writeOk)
+uart.on(UART_ID,"receive",function() sys.publish("UART_RECEIVE") end)
 --配置并且打开串口
 uart.setup(UART_ID,115200,8,uart.PAR_NONE,uart.STOP_1)
 --如果需要打开“串口发送数据完成后，通过异步消息通知”的功能，则使用下面的这行setup，注释掉上面的一行setup

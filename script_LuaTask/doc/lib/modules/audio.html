@@ -63,16 +63,15 @@
   <li><a href="../modules/pb.html">pb</a></li>
   <li><a href="../modules/pins.html">pins</a></li>
   <li><a href="../modules/pm.html">pm</a></li>
-  <li><a href="../modules/record.html">record</a></li>
+  <li><a href="../modules/powerKey.html">powerKey</a></li>
   <li><a href="../modules/ril.html">ril</a></li>
   <li><a href="../modules/sim.html">sim</a></li>
   <li><a href="../modules/sms.html">sms</a></li>
   <li><a href="../modules/socket.html">socket</a></li>
   <li><a href="../modules/sys.html">sys</a></li>
-  <li><a href="../modules/uiwin.html">uiwin</a></li>
+  <li><a href="../modules/uiWin.html">uiWin</a></li>
   <li><a href="../modules/update.html">update</a></li>
   <li><a href="../modules/utils.html">utils</a></li>
-  <li><a href="../modules/wdt.html">wdt</a></li>
 </ul>
 
 </div>
@@ -104,6 +103,12 @@
 	<td class="summary">播放音频</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#stop">
+    stop (<strong  style="color: gray;">[cbFnc=nil]</strong>)
+    </a></td>
+	<td class="summary">停止音频播放</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#setVolume">
     setVolume (vol)
     </a></td>
@@ -116,10 +121,28 @@
 	<td class="summary">设置麦克音量等级</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#getVolume">
+    getVolume ()
+    </a></td>
+	<td class="summary">获取喇叭音量等级</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getMicVolume">
+    getMicVolume (vol)
+    </a></td>
+	<td class="summary">获取麦克音量等级</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#setStrategy">
     setStrategy (strategy)
     </a></td>
 	<td class="summary">设置优先级相同时的播放策略</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#setTTSSpeed">
+    setTTSSpeed (speed)
+    </a></td>
+	<td class="summary">设置TTS朗读速度</td>
 	</tr>
 </table>
 
@@ -155,7 +178,8 @@
         <pre class="example">音频文件路径，跟typ有关
                typ为"FILE"时：表示音频文件路径
                typ为"TTS"时：表示要播放的UTF8编码格式的数据
-               typ为"TTSCC"时：表示要播放给通话对端的UTF8编码格式的数据</pre>
+               typ为"TTSCC"时：表示要播放给通话对端的UTF8编码格式的数据
+               typ为"RECORD"时：表示要播放的录音id</pre>
         </li>
         <li><span class="parameter">vol</span>
             <span class="types"><span class="type">number</span></span>
@@ -172,7 +196,8 @@
                    1-播放出错
                    2-播放优先级不够，没有播放
                    3-传入的参数出错，没有播放
-                   4-被新的播放请求中止</pre>
+                   4-被新的播放请求中止
+                   5-调用audio.stop接口主动停止</pre>
         </li>
         <li><span class="parameter">dup</span>
             <span class="types"><span class="type">bool</span></span>
@@ -189,7 +214,7 @@
     <h3>Returns:</h3>
     <ul>
         <li>
-        <pre class="example">result，bool或者nil类型，同步调用成功返回true，否则返回nil</pre></il>
+        <pre class="example">result，bool或者nil类型，同步调用成功返回true，否则返回false</pre></il>
     </ul>
 
 
@@ -200,6 +225,42 @@
         <li><pre class="example">audio.play(<span class="number">0</span>,<span class="string">"FILE"</span>,<span class="string">"/ldata/call.mp3"</span>,<span class="number">7</span>)</pre></il>
         <li><pre class="example">audio.play(<span class="number">0</span>,<span class="string">"FILE"</span>,<span class="string">"/ldata/call.mp3"</span>,<span class="number">7</span>,cbFnc)</pre></il>
         <li><pre class="example">更多用法参考demo/audio/testAudio.lua</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "stop"></a>
+    <strong  style="color: red;">
+    stop (<strong  style="color: green;">[cbFnc=nil]</strong>)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">停止音频播放</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cbFnc</span>
+            <span class="types"><span class="type">function</span></span>
+         [<em>此参数可选，默认值为：</em> nil]
+        <pre class="example">停止音频播放的回调函数(停止结果通过此函数通知用户)，回调函数的调用形式为：
+      cbFnc(result)
+      result：number类型
+              0表示停止成功</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">nil</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">audio.stop()</pre></il>
     </ul>
 
 </dd>
@@ -268,6 +329,62 @@
 
 </dd>
     <dt>
+    <a name = "getVolume"></a>
+    <strong  style="color: red;">
+    getVolume ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取喇叭音量等级</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">number vol，喇叭音量等级</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">audio.getVolume()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getMicVolume"></a>
+    <strong  style="color: red;">
+    getMicVolume (vol)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取麦克音量等级</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">vol</span>
+        <pre class="example"></pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">number vol，麦克音量等级</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">audio.getMicVolume()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
     <a name = "setStrategy"></a>
     <strong  style="color: red;">
     setStrategy (strategy)
@@ -300,6 +417,38 @@
     </ul>
 
 </dd>
+    <dt>
+    <a name = "setTTSSpeed"></a>
+    <strong  style="color: red;">
+    setTTSSpeed (speed)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">设置TTS朗读速度</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">speed</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">速度范围为0-100，默认50</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">bool result，设置成功返回true，失败返回false</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">audio.setTTSSpeed(<span class="number">70</span>)</pre></il>
+    </ul>
+
+</dd>
 </dl>
 
 
@@ -307,7 +456,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2018-04-24 17:25:11 </i>
+<i style="float:right;">Last updated 2020-04-11 23:40:56 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
