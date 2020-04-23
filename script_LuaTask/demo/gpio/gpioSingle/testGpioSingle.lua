@@ -11,8 +11,8 @@ require"pins"
 
 --[[
 有些GPIO需要打开对应的ldo电压域才能正常工作，电压域和对应的GPIO关系如下
-pmd.ldoset(x,pmd.LDO_VSIM2) -- GPIO 29、30、31 --目前core版本还不支持
-pmd.ldoset(x,pmd.LDO_VLCD) -- GPIO 0、1、2、3、4、6  --目前core版本，x还控制不了不同等级的电压，都是1.8V
+pmd.ldoset(x,pmd.LDO_VSIM1) -- GPIO 29、30、31
+pmd.ldoset(x,pmd.LDO_VLCD) -- GPIO 0、1、2、3、4、6
 pmd.ldoset(x,pmd.LDO_VMMC) -- GPIO 24、25、26、27、28
 x=0时：关闭LDO
 x=1时：LDO输出1.716V
@@ -74,16 +74,23 @@ levelTest = 0
 pmd.ldoset(15,pmd.LDO_VMMC)
 pins.setup(pio.P0_27,1)
 
+pmd.ldoset(15,pmd.LDO_VSIM1)
+pins.setup(pio.P0_29,1)
+pins.setup(pio.P0_30,1)
+pins.setup(pio.P0_31,1)
+
 
 sys.timerLoopStart(function()
     pmd.ldoset(levelTest,pmd.LDO_VMMC)
     pmd.ldoset(levelTest,pmd.LDO_VLCD)
+    pmd.ldoset(levelTest,pmd.LDO_VSIM1)
     log.info("levelTest",levelTest)
     
     levelTest = levelTest+1
     if levelTest>15 then levelTest=0 end
 end,10000)
 ]]
+
 
 
 

@@ -112,3 +112,15 @@ else
 end
 
 
+--[[
+sys.taskInit(function()
+    while true do
+        audio.setChannel(1)
+        sys.wait(5000)
+        audio.setChannel(2)
+        sys.wait(5000)
+    end
+end)
+]]
+
+

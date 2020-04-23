@@ -33,8 +33,8 @@ local function init()
         height = 160, --分辨率高度，160像素；用户根据屏的参数自行修改
         bpp = 16, --位深度，彩屏仅支持16位
         bus = disp.BUS_SPI4LINE, --LCD专用SPI引脚接口，不可修改
-        xoffset = 0, --X轴偏移
-        yoffset = 0, --Y轴偏移
+        xoffset = 2, --X轴偏移
+        yoffset = 1, --Y轴偏移
         freq = 13000000, --spi时钟频率，支持110K到13M（即110000到13000000）之间的整数（包含110000和13000000）
         pinrst = pio.P0_14, --reset，复位引脚
         pinrs = pio.P0_18, --rs，命令/数据选择引脚
@@ -47,6 +47,7 @@ local function init()
         {
             0x00020011,
             0x00010078,
+            --0x00020021, -- 反显
             0x000200B1,
             0x00030002,
             0x00030035,

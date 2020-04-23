@@ -12,12 +12,15 @@ local ip, port, c = "180.97.80.55", "12415"
 
 -- 异步接口演示代码
 local asyncClient
+local clientConnected
 sys.taskInit(function()
     while true do
         while not socket.isReady() do sys.wait(1000) end
         asyncClient = socket.tcp()
         while not asyncClient:connect(ip, port) do sys.wait(2000) end
+        clientConnected = true
         while asyncClient:asyncSelect(60, "ping") do end
+        clientConnected = false
         asyncClient:close()
     end
 end)
@@ -25,7 +28,7 @@ end)
 -- 测试代码，用于异步发送消息
 -- 这里演示如何用非线程发送数据
 sys.timerLoopStart(function()
-    if socket.isReady() then
+    if clientConnected then
         asyncClient:asyncSend("0123456789")
     end
 end, 10000)

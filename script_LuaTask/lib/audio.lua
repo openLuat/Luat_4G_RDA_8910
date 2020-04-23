@@ -44,6 +44,11 @@ local audioQueue = {}
 --sStrategy：优先级相同时的播放策略，0(表示继续播放正在播放的音频，忽略请求播放的新音频)，1(表示停止正在播放的音频，播放请求播放的新音频)
 local sStrategy
 
+local function isTtsStopResultValid()
+    return tonumber(string.match(rtos.get_version(),"Luat_V(%d+)_"))>=8
+end
+
+
 local function handleCb(item,result)
     log.info("audio.handleCb",item.cbFnc,result)
     if item.cbFnc then item.cbFnc(result) end
@@ -142,8 +147,14 @@ local function audioTask()
                     --队列中有优先级高的请求等待处理
                     if #audioQueue>1 then
                         log.warn("audioTask",item.type,"priority low1")
-                        ttsply.stop()
-                        sys.waitUntil("LIB_AUDIO_PLAY_IND",500)
+                        if isTtsStopResultValid() then
+                            if ttsply.stop() then
+                                sys.waitUntil("LIB_AUDIO_PLAY_IND",2000)
+                            end
+                        else
+                            ttsply.stop()
+                            sys.waitUntil("LIB_AUDIO_PLAY_IND",500)
+                        end
                         local behind = audioQueue[2]
                         handleCb(item,behind.type=="STOP" and 5 or 4)
                     else
@@ -155,8 +166,17 @@ local function audioTask()
                         log.info("audioTask",item.type,"recv LIB_AUDIO_PLAY_IND",key,value)
                         
                         if item.type=="TTS" then
-                            ttsply.stop()
-                            sys.waitUntil("LIB_AUDIO_PLAY_IND",500)
+                            if isTtsStopResultValid() then
+                                --log.info("tts 1")
+                                if ttsply.stop() then
+                                    --log.info("tts 2")
+                                    sys.waitUntil("LIB_AUDIO_PLAY_IND",2000)
+                                end
+                                --log.info("tts 3")
+                            else
+                                ttsply.stop()
+                                sys.waitUntil("LIB_AUDIO_PLAY_IND",500)
+                            end                            
                         else
                             
                         end
@@ -331,6 +351,21 @@ function setTTSSpeed(speed)
         ttsSpeed = speed
         return true
     end
+end
+
+--- 设置音频输出通道
+-- 设置后实时生效
+-- @number[opt=2] channel，1：headphone耳机    2：speaker喇叭
+-- @return nil
+-- @usage
+-- 设置为耳机输出：audio.setChannel(1)
+-- 设置为喇叭输出：audio.setChannel(2)
+function setChannel(channel)
+    if tonumber(string.match(rtos.get_version(),"Luat_V(%d+)_"))>=9 then
+        audiocore.setchannel(channel)
+    else
+        ril.request("AT+AUDCH="..(channel==1 and 1 or 2))
+    end    
 end
 
 
