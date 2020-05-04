@@ -29,15 +29,15 @@ module(...,package.seeall)
 local function init()
     local para =
     {
-        width = 132, --分辨率宽度，128像素；用户根据屏的参数自行修改
-        height = 162, --分辨率高度，160像素；用户根据屏的参数自行修改
+        width = 128, --分辨率宽度，128像素；用户根据屏的参数自行修改
+        height = 160, --分辨率高度，160像素；用户根据屏的参数自行修改
         bpp = 16, --位深度，彩屏仅支持16位
         bus = disp.BUS_SPI4LINE, --LCD专用SPI引脚接口，不可修改
-        xoffset = 0, --X轴偏移
-        yoffset = 0, --Y轴偏移
+        xoffset = 2, --X轴偏移
+        yoffset = 1, --Y轴偏移
         freq = 26000000, --spi时钟频率，支持110K到13M（即110000到13000000）之间的整数（包含110000和13000000）
-        pinrst = pio.P0_14, --reset，复位引脚
-        pinrs = pio.P0_18, --rs，命令/数据选择引脚
+        pinrst = pio.P0_6, --reset，复位引脚
+        pinrs = pio.P0_1, --rs，命令/数据选择引脚
         --camera_preview_no_update_screen = 1, --0表示摄像头预览刷屏；1表示摄像头预览不刷屏
         --初始化命令
         --前两个字节表示类型：0001表示延时，0000或者0002表示命令，0003表示数据

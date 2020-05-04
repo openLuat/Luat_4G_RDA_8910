@@ -12,7 +12,7 @@ require"pins"
 --[[
 有些GPIO需要打开对应的ldo电压域才能正常工作，电压域和对应的GPIO关系如下
 pmd.ldoset(x,pmd.LDO_VSIM1) -- GPIO 29、30、31
-pmd.ldoset(x,pmd.LDO_VLCD) -- GPIO 0、1、2、3、4、6
+pmd.ldoset(x,pmd.LDO_VLCD) -- GPIO 0、1、2、3、4
 pmd.ldoset(x,pmd.LDO_VMMC) -- GPIO 24、25、26、27、28
 x=0时：关闭LDO
 x=1时：LDO输出1.716V
