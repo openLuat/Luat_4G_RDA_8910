@@ -10,33 +10,58 @@ require "ril"
 module(..., package.seeall)
 
 
-local ID, FILE = 1, '/record.amr'
-local recording
-local stoping
-local recordCb
-local stopCbFnc
+local FILE = '/record.amr'
+local recordType = "FILE"
+local recording,stoping,recordCb,stopCbFnc
 
 --- 开始录音
--- @param seconds 录音时长，单位：秒
--- @param cb 录音结果回调
--- @return result true - 开始录音 其他 - 失败
--- @usage result = record.start()
-function start(seconds, cb)
+-- @number seconds，录音时长，单位：秒
+-- @function[opt=nil] cbFnc，录音回调函数：
+--     当type参数为"FILE"时，回调函数的调用形式为：
+--         cbFnc(result,size)
+--               result：录音结果，true表示成功，false或者nil表示失败
+--               size：number类型，录音文件的大小，单位是字节，在result为true时才有意义
+--     当type参数为"STREAM"时，回调函数的调用形式为：
+--         cbFnc(result,size,tag)
+--               result：录音结果，true表示成功，false或者nil表示失败
+--               size：number类型，每次上报的录音数据流的大小，单位是字节，在result为true时才有意义
+--               tag：string类型，"STREAM"表示录音数据流通知，"END"表示录音结束
+-- @string[opt="FILE"] type，录音模式
+--     "FILE"表示文件录音模式，录音数据自动保存在文件中，录音结束后，执行一次cbFnc函数
+--     "STREAM"表示流录音模式，录音数据保存在内存中，每隔一段时间执行一次cbFnc函数去读取录音数据流，录音结束后再执行一次cbFnc函数
+-- @number[opt=1] quality，录音质量，0：一般质量 1：中等质量 2：高质量 3：无损质量
+-- @number[opt=3] format，录音格式，1:pcm 2:wav 3:amrnb 4:speex
+-- @usage 
+-- 文件录音模式，录音5秒，一般质量，amrnb格式，录音结束后执行cbFnc函数：
+-- record.start(5,cbFnc)
+-- 流录音模式，录音5秒，一般质量，amrnb格式，每隔一段时间执行一次cbFnc函数，录音结束后再执行一次cbFnc函数：
+-- record.start(5,cbFnc,"STREAM")
+function start(seconds, cbFnc, type, quality, format)
     if recording or stoping or seconds <= 0 or seconds > 50 then
         log.error('record.start', recording, stoping, seconds)
-        if cb then cb() end
+        if cbFnc then cbFnc() end
         return
     end
     delete()
-    --param1: 录音保存文件
-    --param2: 录音时长 n:单位秒
-    --param3: 录音质量 n:0：一般质量 1：中等质量 2：高质量 3：无损质量
-    --param4：录音类型 n:1:mic 2:voice 3:voice_dual
-    --param5：录音文件类型 n: 1:pcm 2:wav 3:amrnb
-    audiocore.record(FILE,seconds,1,1,3)
-    log.info("record.start",seconds)
+
+    recordType = type or "FILE"
+    if type=="STREAM" then
+        --param1: 录音时长 n:单位秒
+        --param2: 录音质量 n:0：一般质量 1：中等质量 2：高质量 3：无损质量
+        --param3：录音类型 n:1:mic 2:voice 3:voice_dual
+        --param4：录音文件类型 n: 1:pcm 2:wav 3:amrnb
+        audiocore.streamrecord(seconds,quality or 1,1,format or 3)
+    else
+        --param1: 录音保存文件
+        --param2: 录音时长 n:单位秒
+        --param3: 录音质量 n:0：一般质量 1：中等质量 2：高质量 3：无损质量
+        --param4：录音类型 n:1:mic 2:voice 3:voice_dual
+        --param5：录音文件类型 n: 1:pcm 2:wav 3:amrnb
+        audiocore.record(FILE,seconds,quality or 1,1,format or 3)
+    end
+    log.info("record.start",seconds,recordType,format or 3)
     recording = true
-    recordCb = cb
+    recordCb = cbFnc
     return true
 end
 
@@ -57,6 +82,7 @@ function stop(cbFnc)
         return
     end
     stopCbFnc = cbFnc
+    log.info("record.stop")
     audiocore.stoprecord()
     stoping = true
 end
@@ -98,6 +124,7 @@ end
 --- 删除录音
 -- @usage record.delete()
 function delete()
+    log.info("record.delete")
     audiocore.deleterecord()
     os.remove(FILE)
 end
@@ -118,21 +145,26 @@ end
 
 
 rtos.on(rtos.MSG_RECORD,function(msg)
-    log.info("record.MSG_RECORD",msg.record_end_ind,msg.record_error_ind)
+    log.info("record.MSG_RECORD",msg.record_end_ind,msg.record_error_ind,recordType)
     --文件录音，在回调时可以删除录音buf；但是流录音，一定要等buf读取完成后，再删除
-    audiocore.deleterecord()
+    if recordType=="FILE" then audiocore.deleterecord() end
     if msg.record_error_ind then
         delete()
-        if recordCb then recordCb(false,0) recordCb = nil end
+        if recordCb then recordCb(false,0,"END") recordCb = nil end
         recording = false
         stoping = false
         if stopCbFnc then stopCbFnc(0) stopCbFnc=nil end
     end
     if msg.record_end_ind then
-        if recordCb then recordCb(true,io.fileSize(FILE)) recordCb = nil end
+        if recordCb then recordCb(true,recordType=="FILE" and io.fileSize(FILE) or 0,"END") recordCb = nil end
         recording = false
         stoping = false
         if stopCbFnc then stopCbFnc(0) stopCbFnc=nil end
     end
+end)
+
+rtos.on(rtos.MSG_STREAM_RECORD,function(msg)
+    log.info("record.MSG_STREAM_RECORD",msg.wait_read_len)
+    if recordCb then recordCb(true,msg.wait_read_len,"STREAM") end
 end)
 

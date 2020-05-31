@@ -31,7 +31,7 @@ local function testPlayFile()
     --单次播放来电铃声，音量等级7，播放结束或者出错调用testcb回调函数
     --audio.play(CALL,"FILE","/lua/call.mp3",audiocore.VOL7,testCb)
     --循环播放来电铃声，音量等级7，没有循环间隔(一次播放结束后，立即播放下一次)
-    audio.play(CALL,"FILE","/lua/call.mp3",audiocore.VOL4,nil,true)
+    audio.play(CALL,"FILE","/lua/call.mp3",audiocore.VOL7,nil,true)
     --循环播放来电铃声，音量等级7，循环间隔为2000毫秒
     --audio.play(CALL,"FILE","/lua/call.mp3",audiocore.VOL7,nil,true,2000)
 end
@@ -114,13 +114,16 @@ end
 
 --[[
 sys.taskInit(function()
+    local vol = 1
     while true do
-        audio.setChannel(1)
-        sys.wait(5000)
-        audio.setChannel(2)
-        sys.wait(5000)
+        log.info("vol",vol)
+        --audio.play(CALL,"FILE","/lua/call.mp3",vol,function() sys.publish("PLAY_END") end)
+        audio.play(TTS,"TTS",ttsStr,vol,function() sys.publish("PLAY_END") end)
+        sys.waitUntil("PLAY_END")
+        vol = (vol==7) and 1 or (vol+1)
     end
 end)
 ]]
+
 
 

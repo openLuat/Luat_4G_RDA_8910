@@ -60,6 +60,8 @@ errDump.request("udp://ota.airm2m.com:9072")
 
 --加载录音功能测试模块
 require "testRecord"
+--require "testRecordStream"
+--require "testRecordSpeexStream"
 
 --启动系统框架
 sys.init(0, 0)

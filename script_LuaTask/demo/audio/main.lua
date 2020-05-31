@@ -60,6 +60,7 @@ errDump.request("udp://ota.airm2m.com:9072")
 
 --加载AUDIO功能测试模块
 require "testAudio"
+--require "testAudioStream"
 
 --启动系统框架
 sys.init(0, 0)

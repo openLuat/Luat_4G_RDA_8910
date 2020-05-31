@@ -1,3 +1,17 @@
+发布时间：2020/05/31 10:10
+修改记录：
+    一、lib脚本修改
+	lib脚本版本号：2.3.2
+	(1)scanCode：支持摄像头拍照和扫码功能
+	(2)record：支持流式录音功能
+	(3)wifiScan：支持wifi热点扫描功能
+	(4)audio：支持通话音量调节功能
+	(5)http：修正“transfer-encoding区分大小写导致的chunk编码数据无法正常解析”的问题
+    二、demo脚本修改
+	(1)完善或者支持camera、record、wifi、audio、call demo
+
+
+
 发布时间：2020/05/04 22:48
 修改记录：
     一、lib脚本修改

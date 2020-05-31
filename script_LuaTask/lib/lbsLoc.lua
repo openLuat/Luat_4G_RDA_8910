@@ -46,7 +46,7 @@ local function enWifiInfo(tWifi)
     if tWifi then
         for k,v in pairs(tWifi) do
             log.info("lbsLoc.enWifiInfo",k,v)
-            ret = ret..pack.pack("Ab",(k:gsub(":","")):fromHex(),v+255)
+            ret = ret..pack.pack("Ab",(k:gsub(":","")):fromHex(),(v<0) and (v+255) or v)
             cnt = cnt+1
         end
     end
@@ -87,7 +87,7 @@ local function taskClient(cbFnc,reqAddr,timeout,productKey,host,port,reqTime,req
                     if result then                        
                         sck:close()
                         log.info("lbcLoc receive",data:toHex())
-                        if data:len()>=11 and data:byte(1)==0 then
+                        if data:len()>=11 and (data:byte(1)==0 or data:byte(1)==0xFF) then
                             cbFnc(0,
                                 trans(common.bcdNumToNum(data:sub(2,6))),
                                 trans(common.bcdNumToNum(data:sub(7,11))),

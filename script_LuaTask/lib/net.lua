@@ -469,6 +469,16 @@ function getRssi()
 	return rssi
 end
 
+function getCell()
+	local i,ret = 1,""
+	for i=1,cellinfo.cnt do
+		if cellinfo[i] and cellinfo[i].lac and cellinfo[i].lac ~= 0 and cellinfo[i].ci and cellinfo[i].ci ~= 0 then
+			ret = ret..cellinfo[i].ci.."."..cellinfo[i].rssi.."."
+		end
+	end
+	return ret
+end
+
 --- 获取当前和临近位置区、小区以及信号强度的拼接字符串
 -- @return string cellInfo,当前和临近位置区、小区以及信号强度的拼接字符串，例如："6311.49234.30;6311.49233.23;6322.49232.18;"
 -- @usage net.getCellInfo()

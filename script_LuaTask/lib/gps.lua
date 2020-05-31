@@ -277,7 +277,7 @@ local function _open()
     if powerCbFnc then
         powerCbFnc(true)
     else
-        pmd.ldoset(7,pmd.LDO_VCAM)
+        pmd.ldoset(15, pmd.LDO_VMMC)
         rtos.sys32k_clk_out(1)
     end
     openFlag = true
@@ -292,7 +292,7 @@ local function _close()
     if powerCbFnc then
         powerCbFnc(false)
     else
-        pmd.ldoset(0,pmd.LDO_VCAM)
+        pmd.ldoset(0,pmd.LDO_VMMC)
         rtos.sys32k_clk_out(0)
     end
     uart.close(uartID)

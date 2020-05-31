@@ -9,25 +9,36 @@ module(...,package.seeall)
 require"cc"
 require"audio"
 
+--来电铃声播放协程ID
+local coIncoming
+
+local function callVolTest()
+    local curVol = audio.getCallVolume()
+    curVol = (curVol>=7) and 1 or (curVol+1)
+    log.info("testCall.setCallVolume",curVol)
+    audio.setCallVolume(curVol)
+end
 
 --- “通话已建立”消息处理函数
 -- @string num，建立通话的对方号码
 -- @return 无
 local function connected(num)
     log.info("testCall.connected")
-    --发送DTMF到对端
-    --cc.sendDtmf("123")
-    --5秒后播放TTS给对端，底层软件必须支持TTS功能
-    --sys.timerStart(audio.play,5000,0,"TTSCC","通话中播放TTS测试",7)
-    --50秒之后主动结束通话
-    sys.timerStart(cc.hangUp,50000,num)
+    coIncoming = nil
+    --通话中音量测试
+    sys.timerLoopStart(callVolTest,5000)
+    --110秒之后主动结束通话
+    sys.timerStart(cc.hangUp,110000,num)
 end
 
 --- “通话已结束”消息处理函数
 -- @return 无
 local function disconnected()
+    coIncoming = nil
     log.info("testCall.disconnected")
     sys.timerStopAll(cc.hangUp)
+    sys.timerStop(callVolTest)
+    audio.stop()
 end
 
 --- “来电”消息处理函数
@@ -35,8 +46,20 @@ end
 -- @return 无
 local function incoming(num)
     log.info("testCall.incoming:"..num)
+    
+    if not coIncoming then
+        coIncoming = sys.taskInit(function()
+            for i=1,7 do
+                --audio.play(1,"TTS","来电话啦",i,function() sys.publish("PLAY_INCOMING_RING_IND") end)
+                audio.play(1,"FILE","/lua/call.mp3",i,function() sys.publish("PLAY_INCOMING_RING_IND") end)
+                sys.waitUntil("PLAY_INCOMING_RING_IND")
+            end
+            --接听来电
+            cc.accept(num)
+        end)
+    end
     --接听来电
-    cc.accept(num)
+    --cc.accept(num)
 end
 
 --- “通话功能模块准备就绪””消息处理函数
@@ -44,7 +67,7 @@ end
 local function ready()
     log.info("tesCall.ready")
     --呼叫10086
-    cc.dial("10086")
+    --sys.timerStart(cc.dial,10000,"10086")
 end
 
 --- “通话中收到对方的DTMF”消息处理函数
@@ -62,4 +85,3 @@ sys.subscribe("CALL_CONNECTED",connected)
 sys.subscribe("CALL_DISCONNECTED",disconnected)
 cc.dtmfDetect(true)
 sys.subscribe("CALL_DTMF_DETECT",dtmfDetected)
---sys.timerStart(audio.play,5000,1,"TTS","播放TTS测试",7)

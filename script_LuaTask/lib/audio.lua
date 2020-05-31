@@ -18,6 +18,7 @@ local stopCbFnc
 local ttsSpeed = 50
 --喇叭音量和mic音量等级
 local sVolume,sMicVolume = 4,1
+local sCallVolume = 4
 
 
 
@@ -287,6 +288,7 @@ function stop(cbFnc)
 end
 
 local function audioMsg(msg)
+    --log.info("audio.MSG_AUDIO",msg.play_end_ind,msg.play_error_ind)
     sys.publish("LIB_AUDIO_PLAY_IND","RESULT",msg.play_end_ind)
 end
 
@@ -304,6 +306,21 @@ function setVolume(vol)
     if result then sVolume = vol end
     return result
 end
+
+--- 设置通话音量等级
+-- @number vol，音量值为0-7，0为静音
+-- @return bool result，设置成功返回true，失败返回false
+-- @usage audio.setCallVolume(7)
+function setCallVolume(vol)
+    --local result = audiocore.setsphvol(vol)
+    --if result then sCallVolume = vol end
+    --return result
+    audiocore.setsphvol(vol)
+    sCallVolume = vol
+    return true
+end
+
+
 --- 设置麦克音量等级
 -- @number vol，音量值为0-15，0为静音
 -- @return bool result，设置成功返回true,失败返回false
@@ -324,6 +341,13 @@ end)
 -- @usage audio.getVolume()
 function getVolume()
     return sVolume
+end
+
+--- 获取通话音量等级
+-- @return number vol，通话音量等级
+-- @usage audio.getCallVolume()
+function getCallVolume()
+    return sCallVolume
 end
 
 --- 获取麦克音量等级
@@ -373,5 +397,6 @@ end
 audiocore.setchannel(audiocore.LOUDSPEAKER)
 --默认音量等级设置为4级，4级是中间等级，最低为0级，最高为7级
 setVolume(sVolume)
+setCallVolume(sCallVolume)
 --默认MIC音量等级设置为1级，最低为0级，最高为15级
 setMicVolume(sMicVolume)

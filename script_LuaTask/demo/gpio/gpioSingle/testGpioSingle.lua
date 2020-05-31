@@ -12,7 +12,14 @@ require"pins"
 --[[
 有些GPIO需要打开对应的ldo电压域才能正常工作，电压域和对应的GPIO关系如下
 pmd.ldoset(x,pmd.LDO_VSIM1) -- GPIO 29、30、31
+
 pmd.ldoset(x,pmd.LDO_VLCD) -- GPIO 0、1、2、3、4
+--注意：
+--Air724 A11以及之前的开发板丝印有误:
+--丝印中的IO_0、IO_1、IO_2、IO_3、IO_4并不对应GPIO0、1、2、3、4
+--丝印中的LCD_DIO、LCD_RS、LCD_CLK、LCD_CS对应GPIO0、1、2、3；模块的LCD_SEL引脚对应GPIO4
+
+
 pmd.ldoset(x,pmd.LDO_VMMC) -- GPIO 24、25、26、27、28
 x=0时：关闭LDO
 x=1时：LDO输出1.716V

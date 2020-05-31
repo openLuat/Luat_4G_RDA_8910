@@ -28,6 +28,7 @@ local function playcb(r)
     --删除录音文件
     record.delete()
     record.start(5,rcdcb)
+    sys.timerStart(record.stop,3000)
 end
 
 --[[
