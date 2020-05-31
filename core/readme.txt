@@ -11,6 +11,9 @@
             不同版本的core可能会有差异，可通过rtos.get_fs_free_size()查询剩余的文件系统可用空间
 
 
+因Flash空间不足，Luat_VXXXX_RDA8910_TTS_FLOAT固件不支持WIFI、CAMERA功能
+
+
 
 
 
