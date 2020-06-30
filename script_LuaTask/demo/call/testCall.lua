@@ -49,17 +49,33 @@ local function incoming(num)
     
     if not coIncoming then
         coIncoming = sys.taskInit(function()
+            while true do
+                --audio.play(1,"TTS","来电话啦",4,function() sys.publish("PLAY_INCOMING_RING_IND") end,true)
+                audio.play(1,"FILE","/lua/call.mp3",4,function() sys.publish("PLAY_INCOMING_RING_IND") end,true)
+                sys.waitUntil("PLAY_INCOMING_RING_IND")
+                break                
+            end
+        end)
+        sys.subscribe("POWER_KEY_IND",function() audio.stop(function() cc.accept(num) end) end)
+    end
+    
+    --[[
+    if not coIncoming then
+        coIncoming = sys.taskInit(function()
             for i=1,7 do
                 --audio.play(1,"TTS","来电话啦",i,function() sys.publish("PLAY_INCOMING_RING_IND") end)
                 audio.play(1,"FILE","/lua/call.mp3",i,function() sys.publish("PLAY_INCOMING_RING_IND") end)
                 sys.waitUntil("PLAY_INCOMING_RING_IND")
             end
             --接听来电
-            cc.accept(num)
+            --cc.accept(num)
         end)
-    end
+        
+    end]]
     --接听来电
     --cc.accept(num)
+    
+    
 end
 
 --- “通话功能模块准备就绪””消息处理函数
@@ -85,3 +101,6 @@ sys.subscribe("CALL_CONNECTED",connected)
 sys.subscribe("CALL_DISCONNECTED",disconnected)
 cc.dtmfDetect(true)
 sys.subscribe("CALL_DTMF_DETECT",dtmfDetected)
+
+
+

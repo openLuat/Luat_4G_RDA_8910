@@ -170,34 +170,37 @@ function getMuid()
 end
 
 --- 打开并且配置PWM(支持2路PWM，仅支持输出)
--- 说明：
--- 当id为0时：period 取值在 80-1625 Hz范围内时，level 占空比取值范围为：1-100；
--- period 取值在 1626-65535 Hz范围时，设x=162500/period, y=x * level / 100, x 和 y越是接近正的整数，则输出波形越准确
--- @number id，PWM输出通道，仅支持0和1，0用的是uart2 tx，1用的是uart2 rx
--- @number period，
--- 当id为0时，period表示频率，单位为Hz，取值范围为80-1625，仅支持整数
--- 当id为1时，取值范围为0-7，仅支持整数，表示时钟周期，单位为毫秒，0-7分别对应125、250、500、1000、1500、2000、2500、3000毫秒
--- @number level，
--- 当id为0时，level表示占空比，单位为level%，取值范围为1-100，仅支持整数
--- 当id为1时，取值范围为1-15，仅支持整数，表示一个时钟周期内的高电平时间，单位为毫秒
---                      1-15分别对应15.6、31.2、46.9、62.5、78.1、93.7、110、125、141、156、172、187、203、219、234毫秒
+-- @number id，PWM输出通道，仅支持0和1
+-- 0使用MODULE_STATUS/GPIO_5引脚
+-- 1使用GPIO_13引脚，注意：上电的时候不要把 GPIO_13 拉高到V_GLOBAL_1V8，否则模块会进入校准模式，不正常开机
+-- @number para1，
+-- 当id为0时，para1表示分频系数，最大值为1024；分频系数和频率的换算关系为：频率=25000000/para1；例如para1为500时，频率为50000Hz
+-- 当id为1时，para1表示时钟周期，取值范围为0-7，仅支持整数
+--                                         0-7分别对应125、250、500、1000、1500、2000、2500、3000毫秒
+-- @number para2，
+-- 当id为0时，para2表示占空比计算系数，最大值为512；占空比计算系数和占空比的计算关系为：占空比=para2/para1
+-- 当id为1时，para2表示一个时钟周期内的高电平时间，取值范围为1-15，仅支持整数
+--                                                           1-15分别对应15.6、31.2、46.8、62、78、94、110、125、140、156、172、188、200、218、234毫秒
 -- @return nil
-function openPwm(id, period, level)
-    assert(type(id) == "number" and type(period) == "number" and type(level) == "number", "openpwm type error")
-    assert(id == 0 or id == 1, "openpwm id error: " .. id)
-    local pmin, pmax, lmin, lmax = 80, 1625, 1, 100
-    if id == 1 then pmin, pmax, lmin, lmax = 0, 7, 1, 15 end
-    assert(period >= pmin and period <= pmax, "openpwm period error: " .. period)
-    assert(level >= lmin and level <= lmax, "openpwm level error: " .. level)
-    req("AT+SPWM=" .. id .. "," .. period .. "," .. level)
+-- @usage
+-- 通道0，频率为50000Hz，占空比为0.2：
+-- misc.openPwm(0,500,100)
+--
+-- 通道1，时钟周期为500ms，高电平时间为125毫秒：
+-- misc.openPwm(1,2,8)
+function openPwm(id, para1, para2)
+    pwm.open(id)
+    pwm.set(id,para1,para2)
 end
 
 --- 关闭PWM
--- @number id，PWM输出通道，仅支持0和1，0用的是uart2 tx，1用的是uart2 rx
+-- @number id，PWM输出通道，仅支持0和1
+-- 0使用MODULE_STATUS/GPIO_5引脚
+-- 1使用GPIO_13引脚，注意：上电的时候不要把 GPIO_13 拉高到V_GLOBAL_1V8，否则模块会进入校准模式，不正常开机
 -- @return nil
 function closePwm(id)
     assert(id == 0 or id == 1, "closepwm id error: " .. id)
-    req("AT+SPWM=" .. id .. ",0,0")
+    pwm.close(id)
 end
 
 --注册以下AT命令的应答处理函数
@@ -213,4 +216,5 @@ req("AT+WISN?")
 --查询IMEI
 req("AT+CGSN")
 req("AT+MUID?")
+req("AT*EXINFO?")
 setTimeReport()

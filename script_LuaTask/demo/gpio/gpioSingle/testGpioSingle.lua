@@ -39,6 +39,7 @@ x=14时：LDO输出3.165V
 x=15时：LDO输出3.177V
 ]]
 
+
 local level = 0
 --GPIO18配置为输出，默认输出低电平，可通过setGpio18Fnc(0或者1)设置输出电平
 local setGpio18Fnc = pins.setup(pio.P0_18,0)
@@ -72,6 +73,21 @@ end
 getGpio13Fnc = pins.setup(pio.P0_13,gpio13IntFnc)
 
 
+--[[
+pmd.ldoset(1,pmd.LDO_VMMC)
+
+getGpio24Fnc = pins.setup(24,nil,pio.PULLUP)
+getGpio25Fnc = pins.setup(25,nil,pio.PULLUP)
+getGpio26Fnc = pins.setup(26,nil,pio.PULLUP)
+getGpio27Fnc = pins.setup(27,nil,pio.PULLUP)
+
+sys.timerLoopStart(function()
+    log.info("getGpio24Fnc",getGpio24Fnc())
+    log.info("getGpio25Fnc",getGpio25Fnc())
+    log.info("getGpio26Fnc",getGpio26Fnc())
+    log.info("getGpio27Fnc",getGpio27Fnc())
+end,2000)]]
+
 
 --[[
 pmd.ldoset(0,pmd.LDO_VLCD)
@@ -96,6 +112,40 @@ sys.timerLoopStart(function()
     levelTest = levelTest+1
     if levelTest>15 then levelTest=0 end
 end,10000)
+]]
+
+--[[
+local intCnt = 0
+sys.taskInit(function()
+    while true do
+        local setGpio14Fnc = pins.setup(pio.P0_14,1)
+        sys.wait(2000)
+        log.info("intCnt",intCnt)
+        sys.wait(2000)
+        intCnt = 0
+        for i=1,10 do
+           setGpio14Fnc(0)
+           sys.wait(3)
+           setGpio14Fnc(1)
+           sys.wait(3)
+        end
+    end
+end)
+
+
+function gpio15IntFnc(msg)
+    log.info("testGpioSingle.gpio15IntFnc",msg,getGpio15Fnc())
+    intCnt = intCnt+1
+    --上升沿中断
+    if msg==cpu.INT_GPIO_POSEDGE then
+    --下降沿中断
+    else
+    end
+end
+
+pio.pin.setdebounce(2)
+--GPIO13配置为中断，可通过getGpio13Fnc()获取输入电平，产生中断时，自动执行gpio13IntFnc函数
+getGpio15Fnc = pins.setup(pio.P0_15,gpio15IntFnc)
 ]]
 
 

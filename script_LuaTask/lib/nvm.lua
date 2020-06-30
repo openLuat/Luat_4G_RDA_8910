@@ -170,7 +170,7 @@ end
 function init(defaultCfgFile)
     local f
     f, libdftconfig = safePcall(defaultCfgFile:match("(.+)%.lua"))
-    configname, econfigname = "/lua/" .. defaultCfgFile, "/lua/" .. defaultCfgFile .. "e"
+    configname, econfigname = "/lua/" .. defaultCfgFile, "/lua/" .. defaultCfgFile .. "c"
     --初始化配置文件，从文件中把参数读取到内存中
     load()
 end

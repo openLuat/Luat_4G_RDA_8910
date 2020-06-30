@@ -13,7 +13,7 @@ module(...,package.seeall)
 -- @return 无
 -- @usage read2()
 local function read2()
-    --ADC1接口用来读取电压
+    --ADC2接口用来读取电压
     local ADC_ID = 2
     -- 读取adc
     -- adcval为number类型，表示adc的原始值，无效值为0xFFFF
@@ -27,7 +27,7 @@ end
 -- @return 无
 -- @usage read3()
 local function read3()
-    --ADC1接口用来读取电压
+    --ADC3接口用来读取电压
     local ADC_ID = 3
     -- 读取adc
     -- adcval为number类型，表示adc的原始值，无效值为0xFFFF

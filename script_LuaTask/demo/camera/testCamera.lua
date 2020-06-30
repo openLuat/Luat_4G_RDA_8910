@@ -77,6 +77,7 @@ function takePhotoAndDisplay()
     disp.camerapreview(0,0,0,0,WIDTH or DEFAULT_WIDTH,HEIGHT or DEFAULT_HEIGHT)
     --设置照片的宽和高像素并且开始拍照
     --此处设置的宽和高和预览时的保持一致
+    --此处的第三个参数表示拍摄质量，默认50，100最好
     disp.cameracapture(WIDTH or DEFAULT_WIDTH,HEIGHT or DEFAULT_HEIGHT)
     --设置照片保存路径
     disp.camerasavephoto("/testCamera.jpg")

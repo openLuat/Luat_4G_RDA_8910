@@ -58,13 +58,13 @@ function setAuthApn(prot,apn,user,pwd)
     local coreVer = rtos.get_version()
     local verNo = coreVer:match("Luat_V(%d+)_ASR1802_")
     if verNo and tonumber(verNo)>=27 then
-        request("AT+AUTOAPN=0")
+        request("AT+AUTOAPN=0")]]
         --0：保存并重启生效
         --1：不保存立即生效
         --2：保存并立即生效
         --3：删除保存的文件
         request('AT+CPNETAPN=2,"'..apn..'","'..user..'","'..pwd..'",'..prot)
-    else]]
+    --[[else
         authProt,authApn,authUser,authPassword = prot or 0,apn or "",user or "",pwd or ""
         request("AT*CGDFLT?")
         ril.regUrc("*CGDFLT", function(data)
@@ -73,7 +73,7 @@ function setAuthApn(prot,apn,user,pwd)
                 setCgdf()
             end
         end)
-    --end
+    end]]
 end
 
 local function Pdp_Act()
@@ -300,6 +300,7 @@ end
 local function cgevurc(data)
     log.info("link.cgevurc",data)
     if string.match(data, "DEACT") then
+        request("AT+CFUN?")
         ready = false
         sys.publish('IP_ERROR_IND')
         sys.publish('PDP_DEACT_IND')
@@ -309,5 +310,5 @@ local function cgevurc(data)
 end
 
 request("AT+CIND=1", nil, cindCnf)
-ril.regUrc("+CGEV", cgevurc)
+ril.regUrc("*CGEV", cgevurc)
 ril.regUrc("+CGDCONT", function(data) pdpCmdCnf("AT+CGDCONT?", true, "OK", data) end)

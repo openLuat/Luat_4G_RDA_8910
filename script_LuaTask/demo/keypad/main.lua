@@ -1,17 +1,8 @@
 --必须在这个位置定义PROJECT和VERSION变量
 --PROJECT：ascii string类型，可以随便定义，只要不使用,就行
 --VERSION：ascii string类型，如果使用Luat物联云平台固件升级的功能，必须按照"X.X.X"定义，X表示1位数字；否则可随便定义
-PROJECT = "LBS_LOC"
+PROJECT = "GPIO_SINGLE"
 VERSION = "2.0.0"
---[[
-使用基站获取经纬度的功能，必须按照以下步骤操作：
-1、打开Luat物联云平台前端页面：https://iot.openluat.com/
-2、如果没有用户名，注册用户
-3、注册用户之后，如果没有对应的项目，创建一个新项目
-4、进入对应的项目，点击左边的项目信息，右边会出现信息内容，找到ProductKey：把ProductKey的内容，赋值给PRODUCT_KEY变量
-]]
---【【【【【【注意：此处的PRODUCT_KEY仅供演示使用，不保证一直能用，量产项目中一定要使用自己在iot.openluat.com中创建的项目productKey】】】】】】
-PRODUCT_KEY = "v32xEAKsGTIEQxtqgwCldp5aPlcnPs3K"
 
 --加载日志功能模块，并且设置日志输出等级
 --如果关闭调用log模块接口输出的日志，等级设置为log.LOG_SILENT即可
@@ -31,6 +22,10 @@ require "net"
 --每1分钟查询一次GSM信号强度
 --每1分钟查询一次基站信息
 net.startQueryAll(60000, 60000)
+--[[
+sys.timerLoopStart(function()
+    log.info("net.getCellInfoExt",net.getCellInfoExt())
+end,1000)]]
 
 --加载控制台调试功能模块（此处代码配置的是uart2，波特率115200）
 --此功能模块不是必须的，根据项目需求决定是否加载
@@ -60,8 +55,7 @@ errDump.request("udp://ota.airm2m.com:9072")
 --require "update"
 --update.request()
 
---加载LbsLoc功能测试模块
-require "testLbsLoc"
+require "testKeypad"
 
 --启动系统框架
 sys.init(0, 0)

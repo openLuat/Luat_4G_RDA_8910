@@ -70,6 +70,7 @@ local function socket(protocol, cert)
         subMessage = nil,
         isBlock = false,
         msg = nil,
+        rcvProcFnc = nil,
     }
     return setmetatable(o, mt)
 end
@@ -396,6 +397,15 @@ function mt:close()
     end
 end
 
+--- socket接收自定义控制处理
+-- @function[opt=nil] rcvCbFnc，socket接收到数据后，执行的回调函数，回调函数的调用形式为：
+-- rcvCbFnc(readFnc,socketIndex,rcvDataLen)
+-- rcvCbFnc内部，会判断是否读取数据，如果读取，执行readFnc(socketIndex,rcvDataLen)，返回true；否则返回false或者nil
+function mt:setRcvProc(rcvCbFnc)
+    assert(self.co == coroutine.running(), "socket:setRcvProc: coroutine mismatch")
+    self.rcvProcFnc = rcvCbFnc
+end
+
 local function on_response(msg)
     local t = {
         [rtos.MSG_SOCK_CLOSE_CNF] = 'SOCKET_CLOSE',
@@ -452,19 +462,24 @@ rtos.on(rtos.MSG_SOCK_RECV_IND, function(msg)
     
     -- local s = socketcore.sock_recv(msg.socket_index, msg.recv_len)
     -- log.debug("socket.recv", "total " .. msg.recv_len .. " bytes", "first " .. 30 .. " bytes", s:sub(1, 30))
-    if sockets[msg.socket_index].wait == "+RECEIVE" then
-        coroutine.resume(sockets[msg.socket_index].co, true, socketcore.sock_recv(msg.socket_index, msg.recv_len))
-    else -- 数据进缓冲区，缓冲区溢出采用覆盖模式
-        if #sockets[msg.socket_index].input > INDEX_MAX then
-            log.error("socket recv", "out of stack", "block")
-            -- sockets[msg.socket_index].input = {}
-            sockets[msg.socket_index].isBlock = true
-            sockets[msg.socket_index].msg = msg
-        else
-            sockets[msg.socket_index].isBlock = false
-            table.insert(sockets[msg.socket_index].input, socketcore.sock_recv(msg.socket_index, msg.recv_len))
+    log.debug("socket.recv", msg.recv_len, sockets[msg.socket_index].rcvProcFnc)
+    if sockets[msg.socket_index].rcvProcFnc then
+        sockets[msg.socket_index].rcvProcFnc(socketcore.sock_recv, msg.socket_index, msg.recv_len)
+    else
+        if sockets[msg.socket_index].wait == "+RECEIVE" then
+            coroutine.resume(sockets[msg.socket_index].co, true, socketcore.sock_recv(msg.socket_index, msg.recv_len))
+        else -- 数据进缓冲区，缓冲区溢出采用覆盖模式
+            if #sockets[msg.socket_index].input > INDEX_MAX then
+                log.error("socket recv", "out of stack", "block")
+                -- sockets[msg.socket_index].input = {}
+                sockets[msg.socket_index].isBlock = true
+                sockets[msg.socket_index].msg = msg
+            else
+                sockets[msg.socket_index].isBlock = false
+                table.insert(sockets[msg.socket_index].input, socketcore.sock_recv(msg.socket_index, msg.recv_len))
+            end
+            sys.publish("SOCKET_RECV", msg.socket_index)
         end
-        sys.publish("SOCKET_RECV", msg.socket_index)
     end
 end)
 

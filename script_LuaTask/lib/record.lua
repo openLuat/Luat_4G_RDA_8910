@@ -31,13 +31,21 @@ local recording,stoping,recordCb,stopCbFnc
 --     "STREAM"表示流录音模式，录音数据保存在内存中，每隔一段时间执行一次cbFnc函数去读取录音数据流，录音结束后再执行一次cbFnc函数
 -- @number[opt=1] quality，录音质量，0：一般质量 1：中等质量 2：高质量 3：无损质量
 -- @number[opt=3] format，录音格式，1:pcm 2:wav 3:amrnb 4:speex
+--      pcm格式：录音质量参数无效，采样率：8000，单声道，采样精度：16 bit，5秒钟录音80KB左右
+--      wav格式：录音质量参数无效，比特率：128kbps，5秒钟录音80KB左右
+--      amrnb格式：录音质量参数有效
+--                 录音质量为0时：比特率：5.15kbps，5秒钟录音3KB多
+--                 录音质量为1时：比特率：6.70kbps，5秒钟录音4KB多
+--                 录音质量为2时：比特率：7.95kbps，5秒钟录音4KB多
+--                 录音质量为3时：比特率：12.2kbps，5秒钟录音7KB多
+--      speex格式：录音质量参数无效，pcm格式128kbps后的压缩格式，5秒钟6KB左右
 -- @usage 
 -- 文件录音模式，录音5秒，一般质量，amrnb格式，录音结束后执行cbFnc函数：
 -- record.start(5,cbFnc)
 -- 流录音模式，录音5秒，一般质量，amrnb格式，每隔一段时间执行一次cbFnc函数，录音结束后再执行一次cbFnc函数：
 -- record.start(5,cbFnc,"STREAM")
 function start(seconds, cbFnc, type, quality, format)
-    if recording or stoping or seconds <= 0 or seconds > 50 then
+    if recording or stoping or seconds <= 0 or ((type~="STREAM") and seconds>50) then
         log.error('record.start', recording, stoping, seconds)
         if cbFnc then cbFnc() end
         return
