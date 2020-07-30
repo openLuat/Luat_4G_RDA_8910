@@ -41,6 +41,7 @@ local RILCMD = {
     ["+WISN"] = 4,
     ["+CIMI"] = 1,
     ["+ICCID"] = 2,
+    ["+SIMCROSS"] = 2,
     ["+CGATT"] = 2,
     ["+CCLK"] = 2,
     --["+ATWMFT"] = 4,

@@ -268,6 +268,8 @@ ril.regRsp('+CGATT', function(a, b, c, intermediate)
         gprsAttached = attached
         sys.publish("GPRS_ATTACH", attached)
     end
+	
+	if ready then return end
 
     if attached then
         log.info("pdp active", apnname, username, password)
@@ -298,15 +300,23 @@ local function cindCnf(cmd, result)
 end
 
 local function cgevurc(data)
+	local cid=0
     log.info("link.cgevurc",data)
+	
     if string.match(data, "DEACT") then
-        request("AT+CFUN?")
-        ready = false
-        sys.publish('IP_ERROR_IND')
-        sys.publish('PDP_DEACT_IND')
-        if net.getState() ~= 'REGISTERED' then return end
-        sys.timerStart(Pdp_Act, 2000)
+		cid =  string.match(data, "DEACT,(%d)")
+		cid = tonumber(cid)
+
+		if cid== cid_manual then
+			request("AT+CFUN?")
+			ready = false
+			sys.publish('IP_ERROR_IND')
+			sys.publish('PDP_DEACT_IND')
+			if net.getState() ~= 'REGISTERED' then return end
+			sys.timerStart(Pdp_Act, 2000)
+		end
     end
+	
 end
 
 request("AT+CIND=1", nil, cindCnf)

@@ -68,7 +68,7 @@ local function rsp(cmd, success, response, intermediate)
             if setImeiCbFnc then setImeiCbFnc(false) end
         end
     elseif cmd:match("AT%+MUID?") then
-        if intermediate then muid = intermediate:match("+MUID:%s*\"(.+)\"") end
+        if intermediate then muid = intermediate:match("+MUID:%s*(.+)") end
     end
 end
 

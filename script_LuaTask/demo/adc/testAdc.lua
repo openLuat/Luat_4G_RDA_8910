@@ -17,10 +17,10 @@ local function read2()
     local ADC_ID = 2
     -- 读取adc
     -- adcval为number类型，表示adc的原始值，无效值为0xFFFF
-    -- voltval为number类型，表示转换后的电压值，单位为毫伏，无效值为0xFFFF；adc.read接口返回的voltval放大了3倍，所以需要除以3还原成原始电压
+    -- voltval为number类型，表示转换后的电压值，单位为毫伏，无效值为0xFFFF
 
     local adcval,voltval = adc.read(ADC_ID)
-    log.info("testAdc2.read",adcval,(voltval-(voltval%3))/3,voltval)
+    log.info("testAdc2.read",adcval,voltval)
 end
 
 --- ADC读取测试
@@ -31,10 +31,10 @@ local function read3()
     local ADC_ID = 3
     -- 读取adc
     -- adcval为number类型，表示adc的原始值，无效值为0xFFFF
-    -- voltval为number类型，表示转换后的电压值，单位为毫伏，无效值为0xFFFF；adc.read接口返回的voltval放大了3倍，所以需要除以3还原成原始电压
+    -- voltval为number类型，表示转换后的电压值，单位为毫伏，无效值为0xFFFF
 
     local adcval,voltval = adc.read(ADC_ID)
-    log.info("testAdc3.read",adcval,(voltval-(voltval%3))/3,voltval)
+    log.info("testAdc3.read",adcval,voltval)
 end
 
 -- 开启对应的adc通道

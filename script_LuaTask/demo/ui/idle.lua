@@ -27,7 +27,7 @@ local function refresh()
     disp.puttext(common.utf8ToGb2312("待机界面"),lcd.getxpos(common.utf8ToGb2312("待机界面")),0)
     local tm = misc.getClock()
     local datestr = string.format("%04d",tm.year).."-"..string.format("%02d",tm.month).."-"..string.format("%02d",tm.day)
-    local timestr = string.format("%02d",tm.hour)..":"..string.format("%02d",tm.min)
+    local timestr = string.format("%02d",tm.hour)..":"..string.format("%02d",tm.min)..":"..string.format("%02d",tm.sec)
     --显示日期
     lcd.setcolor(0x07E0)
     disp.puttext(datestr,lcd.getxpos(datestr),24)
@@ -69,5 +69,5 @@ function open()
 end
 
 ntp.timeSync()
-sys.timerLoopStart(clkind,60000)
+sys.timerLoopStart(clkind,1000)
 sys.subscribe("TIME_UPDATE_IND",clkind)

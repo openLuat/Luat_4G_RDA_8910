@@ -8,9 +8,11 @@ require "ril"
 require "sys"
 module(..., package.seeall)
 
-
+local req = ril.request
 --sim卡的imsi、sim卡的iccid
 local imsi, iccid, status
+
+local simCross,setSimCrossCbFnc
 
 --- 获取sim卡的iccid
 -- @return string ,返回iccid，如果还没有读取出来，则返回nil
@@ -64,7 +66,20 @@ intermediate：AT命令的应答中的中间信息
 ]]
 local function rsp(cmd, success, response, intermediate)
     if cmd == "AT+ICCID" then
-        iccid = string.match(intermediate, "%+ICCID: (.+)")
+        if intermediate then
+            iccid = string.match(intermediate, "%+ICCID: (.+)")
+        end
+    elseif cmd == "AT+SIMCROSS?" then
+        if success then
+            simCross = tonumber(intermediate:match("%+SIMCROSS:%s*(%d)"))
+        end
+        if setSimCrossCbFnc then setSimCrossCbFnc(success) end 
+    elseif cmd:match("AT%+SIMCROSS=") then
+        if success then
+            req("AT+SIMCROSS?")
+        else
+            if setSimCrossCbFnc then setSimCrossCbFnc(false) end
+        end        
     elseif cmd == "AT+CIMI" then
         imsi = intermediate
         --产生一个内部消息IMSI_READY，通知已经读取imsi
@@ -109,9 +124,36 @@ function set2gSim()
     ril.request("AT+MEDCR=0,19,1")
 end
 
+--- 设置双卡单待sim id
+-- @number id,双卡单待的sim id，仅支持0和1
+-- @function[opt=nil] cbFnc,设置结果回调函数，回调函数的调用形式为：
+-- cnFnc(result)，result为true表示成功，false或者nil为失败
+-- @return nil
+-- @usage
+-- sim.setId(0)
+-- sim.setId(1,cbFnc)
+function setId(id,cbFnc)
+    if id ~= simCross then
+        setSimCrossCbFnc = cbFnc
+        ril.request("AT+SIMCROSS="..id) 
+    else
+        if cbFnc then cbFnc(true) end
+    end
+end
+
+--- 获取目前设置的双卡单待id
+-- @return number ,返回id(0或者1)，如果还没有读取出来，则返回nil
+-- @usage 注意：开机lua脚本运行之后，会发送at命令去查询id，所以需要一定时间才能获取到id。开机后立即调用此接口，基本上返回nil
+-- @usage sim.getId()
+function getId()
+    return simCross
+end
+
 --注册AT+CCID命令的应答处理函数
 ril.regRsp("+ICCID", rsp)
 --注册AT+CIMI命令的应答处理函数
 ril.regRsp("+CIMI", rsp)
+ril.regRsp("+SIMCROSS", rsp)
 --注册+CPIN通知的处理函数
 ril.regUrc("+CPIN", urc)
+ril.request("AT+SIMCROSS?")

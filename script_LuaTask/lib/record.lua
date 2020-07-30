@@ -39,12 +39,15 @@ local recording,stoping,recordCb,stopCbFnc
 --                 录音质量为2时：比特率：7.95kbps，5秒钟录音4KB多
 --                 录音质量为3时：比特率：12.2kbps，5秒钟录音7KB多
 --      speex格式：录音质量参数无效，pcm格式128kbps后的压缩格式，5秒钟6KB左右
+-- @number[opt=nil] streamRptLen，流录音时，每次上报的字节阀值
 -- @usage 
 -- 文件录音模式，录音5秒，一般质量，amrnb格式，录音结束后执行cbFnc函数：
 -- record.start(5,cbFnc)
 -- 流录音模式，录音5秒，一般质量，amrnb格式，每隔一段时间执行一次cbFnc函数，录音结束后再执行一次cbFnc函数：
 -- record.start(5,cbFnc,"STREAM")
-function start(seconds, cbFnc, type, quality, format)
+-- 流录音模式，录音5秒，一般质量，amrnb格式，每产生500字节的录音数据执行一次cbFnc函数，录音结束后再执行一次cbFnc函数：
+-- record.start(5,cbFnc,"STREAM",nil,nil,500)
+function start(seconds, cbFnc, type, quality, format, streamRptLen)
     if recording or stoping or seconds <= 0 or ((type~="STREAM") and seconds>50) then
         log.error('record.start', recording, stoping, seconds)
         if cbFnc then cbFnc() end
@@ -58,7 +61,7 @@ function start(seconds, cbFnc, type, quality, format)
         --param2: 录音质量 n:0：一般质量 1：中等质量 2：高质量 3：无损质量
         --param3：录音类型 n:1:mic 2:voice 3:voice_dual
         --param4：录音文件类型 n: 1:pcm 2:wav 3:amrnb
-        audiocore.streamrecord(seconds,quality or 1,1,format or 3)
+        audiocore.streamrecord(seconds,quality or 1,1,format or 3,streamRptLen)
     else
         --param1: 录音保存文件
         --param2: 录音时长 n:单位秒

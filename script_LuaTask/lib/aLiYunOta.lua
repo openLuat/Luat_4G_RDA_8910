@@ -17,6 +17,7 @@ module(..., package.seeall)
 local gVersion,gName,gCb = _G.PROJECT.."_".._G.VERSION.."_"..rtos.get_version()
 local gFilePath,gFileSize
 local processed = 0
+local flowMd5
 --productKey：产品标识
 --deviceName：设备名称
 local productKey,deviceName
@@ -37,16 +38,27 @@ local function otaCb(result,filePath,md5,size)
             local calMD5 = crypto.md5(filePath,"file")
             result = (string.upper(calMD5) == string.upper(md5))
             log.info("aLiYunOta.otaCb cmp md5",result,calMD5,md5)
-        else
-            rtos.fota_end()
-            log.info("aLiYunOta.otaCb",result,size)
+        else   
+            local calMD5 = flowMd5:hexdigest()
+            result = (string.upper(calMD5) == string.upper(md5))           
+            log.info("aLiYunOta.otaCb cmp md5",result,calMD5,md5)
         end
     end
+    
+    sys.publish("LIB_ALIYUN_OTA_DOWNLOAD_END",result)
+    
     if gCb then
         gCb(result,filePath)
     else
-        if result then sys.restart("ALIYUN_OTA") end
-    end
+        rtos.fota_end()
+        if result then
+            sys.restart("ALIYUN_OTA")
+        else
+            rtos.fota_start()
+            rtos.fota_end()
+        end
+    end 
+    
 end
 
 --[[
@@ -92,6 +104,7 @@ local function saveUpdata(pdata,binlen,statusCode)
             log.info("updata.fota_process","fail!!")
             return
         else
+            flowMd5:update(pdata)
             --打印此升级包的长度跟总包长度
             processed = processed + pdata:len()
             log.info("updata.fota_process",processed,binlen)
@@ -154,7 +167,9 @@ function upgrade(payload)
         return
     end     
     if result and jsonData.data and jsonData.data.url then
+        flowMd5 = crypto.flow_md5()
         sys.taskInit(downloadTask,jsonData.data.url,jsonData.data.size,jsonData.data.md5)
+        sys.publish("LIB_ALIYUN_OTA_DOWNLOAD_BEGIN")
     end
 end
 
@@ -199,6 +214,10 @@ function connectCb(result,key,name)
     else
         sys.timerStop(verRpt)
     end
+end
+
+function isDownloading()
+    return downloading
 end
 
 --- 设置当前的固件版本号

@@ -134,7 +134,7 @@ data：当前小区和临近小区信息字符串，例如下面中的每一行�
 ]]
 local function eemLteSvc(data)
     local mcc,mnc,lac,ci,rssi,svcData
-    if data:match("%+EEMLTESVC:%d+,%s*%d+,%s*%d+,%s*.+") then
+    if data:match("%+EEMLTESVC:%s*%d+,%s*%d+,%s*%d+,%s*.+") then
         svcData = string.match(data, "%+EEMLTESVC:(.+)")
         --log.info("eemLteSvc",svcData)
         if svcData then
@@ -152,7 +152,7 @@ local function eemLteSvc(data)
             if rssi>31 then rssi=31 end
             if rssi<0 then rssi=0 end
         end
-        --log.info("eemLteSvc1",lac,ci,mcc,mnc)
+        log.info("eemLteSvc1",lac,ci,mcc,mnc)
         if lac and lac~="0" and ci and ci ~= "0" and mcc and mnc then
             --如果是第一条，清除信息表
             resetCellInfo()
@@ -214,7 +214,7 @@ data：当前小区信息字符串，例如下面中的每一行：
 ]]
 local function eemGsmInfoSvc(data)
 	--只处理有效的CENG信息
-	if string.find(data, "%+EEMGINFOSVC: %d+, %d+, %d+, .+") then
+	if string.find(data, "%+EEMGINFOSVC:%s*%d+,%s*%d+,%s*%d+,%s*.+") then
 		local mcc,mnc,lac,ci,ta,rssi
 		local svcData = string.match(data, "%+EEMGINFOSVC:(.+)")
 		if svcData then
