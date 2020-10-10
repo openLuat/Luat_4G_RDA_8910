@@ -1,4 +1,14 @@
-﻿版本号：Luat_V0017_RDA8910_XXX.pac
+﻿版本号：Luat_V0022_RDA8910_XXX.pac
+发布时间：2020/09/30 18:00
+修改记录：
+    (1)添加rtos.setTransData
+    (2)添加Socket Options参数设置接口sock_setopt,lua通过设置opt实现保活功能
+    (3)修复V0017 TTS FLOAT版本FOTA升级失败问题
+    (4)支持关机充电功能
+    (5)添加des_encrypt和des_decrypt接口
+    
+
+版本号：Luat_V0017_RDA8910_XXX.pac
 发布时间：2020/07/01 00:07
 修改记录：
     (1)修正“一直扫码半小时左右卡死，一直扫描失败”的问题
