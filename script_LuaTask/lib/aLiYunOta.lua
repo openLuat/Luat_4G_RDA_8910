@@ -45,17 +45,17 @@ local function otaCb(result,filePath,md5,size)
         end
     end
     
-    sys.publish("LIB_ALIYUN_OTA_DOWNLOAD_END",result)
+    rtos.fota_end()
+    if not result then
+        rtos.fota_start()
+        rtos.fota_end()
+    end
     
     if gCb then
         gCb(result,filePath)
-    else
-        rtos.fota_end()
+    else        
         if result then
-            sys.restart("ALIYUN_OTA")
-        else
-            rtos.fota_start()
-            rtos.fota_end()
+            sys.restart("ALIYUN_OTA") 
         end
     end 
     
@@ -112,7 +112,7 @@ local function saveUpdata(pdata,binlen,statusCode)
     end    
 end
 
-local function downloadTask(url,size,md5)
+local function downloadTask(url,size,md5,ver)
     log.info("aLiYunOta.downloadTask1",downloading,url,size,md5)
     if not downloading then
         downloading = true
@@ -120,6 +120,7 @@ local function downloadTask(url,size,md5)
         
         local rangeBegin,retryCnt = 0,0
         sys.timerStart(getPercent,5000)
+        sys.publish("LIB_ALIYUN_OTA_DOWNLOAD_BEGIN",ver)
         while true do
             if not gName then
                 gName = saveUpdata
@@ -168,8 +169,7 @@ function upgrade(payload)
     end     
     if result and jsonData.data and jsonData.data.url then
         flowMd5 = crypto.flow_md5()
-        sys.taskInit(downloadTask,jsonData.data.url,jsonData.data.size,jsonData.data.md5)
-        sys.publish("LIB_ALIYUN_OTA_DOWNLOAD_BEGIN")
+        sys.taskInit(downloadTask,jsonData.data.url,jsonData.data.size,jsonData.data.md5,jsonData.data.version)
     end
 end
 

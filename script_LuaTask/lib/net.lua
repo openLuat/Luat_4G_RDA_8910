@@ -38,7 +38,8 @@ flyMode = false
 --lac：位置区ID
 --ci：小区ID
 --rssi：信号强度
-local lac, ci, rssi = "", "", 0
+--rsrp：信号接收功率
+local lac, ci, rssi, rsrp = "", "", 0, 0
 
 --cellinfo：当前小区和临近小区信息表
 --multicellcb：获取多小区的回调函数
@@ -62,7 +63,7 @@ end
 返回值：无
 ]]
 local function creg(data)
-    local p1, s
+    local p1, s,act
     local prefix = (netMode == NetMode_LTE) and "+CEREG: " or (netMode == NetMode_noNet and "+CREG: " or "+CGREG: ")
     log.info("net.creg",netMode,prefix)
     if not data:match(prefix) then
@@ -74,6 +75,9 @@ local function creg(data)
     if p1 == nil then
         _, _, p1 = data:find(prefix .. "(%d+)")
         if p1 == nil then return end
+        act = data:match(prefix .. "%d+,.-,.-,(%d+)")
+    else
+        act = data:match(prefix .. "%d,%d+,.-,.-,(%d+)")
     end
 
     --设置注册状态
@@ -101,6 +105,20 @@ local function creg(data)
             cellinfo[1].lac = tonumber(lac,16)
             cellinfo[1].ci = tonumber(ci,16)
             cellinfo[1].rssi = 28
+        end
+
+        if act then
+            if act=="0" then
+                UpdNetMode("^MODE: 3,1")
+            elseif act=="1" then
+                UpdNetMode("^MODE: 3,2")
+            elseif act=="3" then
+                UpdNetMode("^MODE: 3,3")
+            elseif act=="7" then
+                UpdNetMode("^MODE: 17,17")
+            else
+                UpdNetMode("^MODE: 5,7")
+            end
         end
     end
 end
@@ -346,7 +364,7 @@ end
 参数  ：data：NetMode信息字符串，例如"^MODE: 17,17"
 返回值：无
 ]]
-local function UpdNetMode(data)
+function UpdNetMode(data)
 	local _, _, SysMainMode,SysMode = string.find(data, "(%d+),(%d+)")
 	local netMode_cur
 	log.info("net.UpdNetMode",netMode_cur,netMode, SysMainMode,SysMode)
@@ -491,6 +509,13 @@ function getRssi()
 	return rssi
 end
 
+--- 信号接收功率
+-- @return number rsrp,当前信号接收功率(取值范围-140 - -40)
+-- @usage net.getRsrp()
+function getRsrp()
+	return rsrp
+end
+
 function getCell()
 	local i,ret = 1,""
 	for i=1,cellinfo.cnt do
@@ -517,11 +542,11 @@ end
 --- 获取当前和临近位置区、小区、mcc、mnc、以及信号强度的拼接字符串
 -- @return string cellInfo,当前和临近位置区、小区、mcc、mnc、以及信号强度的拼接字符串，例如："460.01.6311.49234.30;460.01.6311.49233.23;460.02.6322.49232.18;"
 -- @usage net.getCellInfoExt()
-function getCellInfoExt()
+function getCellInfoExt(rssi)
 	local i, ret = 1, ""
 	for i = 1, cellinfo.cnt do
 		if cellinfo[i] and cellinfo[i].mcc and cellinfo[i].mnc and cellinfo[i].lac and cellinfo[i].lac ~= 0 and cellinfo[i].ci and cellinfo[i].ci ~= 0 then
-			ret = ret .. string.format("%x",cellinfo[i].mcc) .. "." .. string.format("%x",cellinfo[i].mnc) .. "." .. cellinfo[i].lac .. "." .. cellinfo[i].ci .. "." .. cellinfo[i].rssi .. ";"
+			ret = ret .. string.format("%x",cellinfo[i].mcc) .. "." .. string.format("%x",cellinfo[i].mnc) .. "." .. cellinfo[i].lac .. "." .. cellinfo[i].ci .. "." .. (rssi and (cellinfo[i].rssi*2-113) or cellinfo[i].rssi) .. ";"
 		end
 	end
 	return ret
@@ -555,6 +580,11 @@ local function rsp(cmd, success, response, intermediate)
 				rssi = rssi == 99 and 0 or rssi
 				--产生一个内部消息GSM_SIGNAL_REPORT_IND，表示读取到了信号强度
 				publish("GSM_SIGNAL_REPORT_IND", success, rssi)
+			end
+		elseif prefix == "+CESQ" then
+	        local s = string.match(intermediate, "+CESQ: %d+,%d+,%d+,%d+,%d+,(%d+)")
+			if s ~= nil then
+				rsrp = tonumber(s)
 			end
 		elseif prefix == "+CENG" then end
 	end
@@ -604,6 +634,7 @@ function csqQueryPoll(period)
     if not flyMode then        
         --发送AT+CSQ查询
         ril.request("AT+CSQ")
+        ril.request("AT+CESQ")
     else
         log.warn("net.csqQueryPoll", "flymode:", flyMode)
     end
@@ -623,6 +654,7 @@ end
 -- @usage net.startQueryAll(60000) -- 1分钟查询1次信号强度，只立即查询1次基站信息
 -- @usage net.startQueryAll(60000,600000) -- 1分钟查询1次信号强度，10分钟查询1次基站信息
 function startQueryAll(...)
+	local arg = { ... }
     csqQueryPoll(arg[1])
     cengQueryPoll(arg[2])
     if flyMode then        
@@ -695,6 +727,7 @@ ril.regUrc("^MODE", neturc)
 --ril.regUrc("+CRSM", neturc)
 --注册AT+CCSQ和AT+CENG?命令的应答处理函数
 ril.regRsp("+CSQ", rsp)
+ril.regRsp("+CESQ",rsp)
 --ril.regRsp("+CENG", rsp)
 ril.regRsp("+CFUN", rsp)-- 飞行模式
 --发送AT命令

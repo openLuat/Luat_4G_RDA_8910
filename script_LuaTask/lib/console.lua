@@ -53,6 +53,7 @@ local function main_loop()
     -- 定义执行环境，命令行下输入的脚本的print重写到命令行的write
     local execute_env = {
         print = function(...)
+			local arg = { ... }
             for i, v in ipairs(arg) do
                 arg[i] = type(v) == "nil" and "nil" or tostring(v)
             end

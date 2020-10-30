@@ -10,7 +10,7 @@ require "patch"
 module(..., package.seeall)
 
 -- lib脚本版本号，只要lib中的任何一个脚本做了修改，都需要更新此版本号
-SCRIPT_LIB_VER = "2.3.4"
+SCRIPT_LIB_VER = "2.3.5"
 
 -- TaskID最大值
 local TASK_TIMER_ID_MAX = 0x1FFFFFFF
@@ -109,7 +109,7 @@ end
 -- @usage sys.taskInit(task1,'a','b')
 function taskInit(fun, ...)
     local co = coroutine.create(fun)
-    coroutine.resume(co, unpack(arg))
+    coroutine.resume(co, ...)
     return co
 end
 
@@ -166,6 +166,7 @@ end
 -- @usage timerStop(1)
 function timerStop(val, ...)
     -- val 为定时器ID
+	local arg={ ... }
     if type(val) == 'number' then
         timerPool[val], para[val], loop[val] = nil
         rtos.timer_stop(val)
@@ -204,15 +205,20 @@ end
 -- @return number 定时器ID，如果失败，返回nil
 function timerStart(fnc, ms, ...)
     --回调函数和时长检测
+	local arg={ ... }
+	local argcnt=0
+	for i, v in pairs(arg) do
+		argcnt = argcnt+1
+	end
     assert(fnc ~= nil, "sys.timerStart(first param) is nil !")
     assert(ms > 0, "sys.timerStart(Second parameter) is <= zero !")
     --4G底层不支持小于5ms的定时器
     if ms < 5 then ms = 5 end
     -- 关闭完全相同的定时器
-    if arg.n == 0 then
+    if argcnt == 0 then
         timerStop(fnc)
     else
-        timerStop(fnc, unpack(arg))
+        timerStop(fnc, ...)
     end
     -- 为定时器申请ID，ID值 1-20 留给任务，20-30留给消息专用定时器
     while true do
@@ -226,7 +232,7 @@ function timerStart(fnc, ms, ...)
     --调用底层接口启动定时器
     if rtos.timer_start(msgId, ms) ~= 1 then log.debug("rtos.timer_start error") return end
     --如果存在可变参数，在定时器参数表中保存参数
-    if arg.n ~= 0 then
+    if argcnt ~= 0 then
         para[msgId] = arg
     end
     --返回定时器id
@@ -239,7 +245,7 @@ end
 -- @param ... 可变参数 fnc的参数
 -- @return number 定时器ID，如果失败，返回nil
 function timerLoopStart(fnc, ms, ...)
-    local tid = timerStart(fnc, ms, unpack(arg))
+    local tid = timerStart(fnc, ms, ...)
     if tid then loop[tid] = (ms<5 and 5 or ms) end
     return tid
 end
@@ -251,6 +257,7 @@ end
 -- @param ... 可变参数
 -- @return number 开启状态返回true，否则nil
 function timerIsActive(val, ...)
+	local arg={ ... }
     if type(val) == "number" then
         return timerPool[val]
     else
@@ -299,6 +306,7 @@ end
 -- @return 无
 -- @usage publish("NET_STATUS_IND")
 function publish(...)
+	local arg = { ... }
     table.insert(messageQueue, arg)
 end
 

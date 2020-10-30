@@ -149,7 +149,8 @@ function sendDtmf(str, playtime, intvl)
     playtime = playtime and playtime or 100
     intvl = intvl and intvl or 100
 
-    req("AT+SENDSOUND=" .. string.format("\"%s\",%d,%d", str, playtime, intvl))
+    --req("AT+SENDSOUND=" .. string.format("\"%s\",%d,%d", str, playtime, intvl))
+    req("AT+VTS=".. str)
 end
 
 local dtmfnum = { [71] = "Hz1000", [69] = "Hz1400", [70] = "Hz2300" }

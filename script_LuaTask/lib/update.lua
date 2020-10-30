@@ -17,6 +17,9 @@ local sUpdating,sCbFnc,sUrl,sPeriod,SRedir,sLocation,fotastart
 local sProcessedLen = 0
 --local sBraekTest = 0
 local httpRspCode
+local sGetImeiFnc
+
+local otaBegin
 
 local function httpDownloadCbFnc(result,statusCode,head)
     log.info("update.httpDownloadCbFnc",result,statusCode,head,sCbFnc,sPeriod)
@@ -25,15 +28,17 @@ end
 
 local function processOta(stepData,totalLen,statusCode)
     if stepData and totalLen then
-        if statusCode=="200" or statusCode=="206" then            
+        if statusCode=="200" or statusCode=="206" then
+            if not otaBegin then sys.publish("LIB_UPDATE_OTA_DOWNLOAD_BEGIN") otaBegin=true end
             if rtos.fota_process((sProcessedLen+stepData:len()>totalLen) and stepData:sub(1,totalLen-sProcessedLen) or stepData,totalLen)~=0 then 
                 log.error("update.processOta","fail")
+                sys.publish("LIB_UPDATE_OTA_DOWNLOAD_END",false)
                 return false
             else
                 sProcessedLen = sProcessedLen + stepData:len()
                 log.info("update.processOta",totalLen,sProcessedLen,(sProcessedLen*100/totalLen).."%")
                 --if sProcessedLen*100/totalLen==sBraekTest then return false end
-                if sProcessedLen*100/totalLen>=100 then return true end
+                if sProcessedLen*100/totalLen>=100 then sys.publish("LIB_UPDATE_OTA_DOWNLOAD_END",true) return true end
             end
         elseif statusCode:sub(1,1)~="3" and stepData:len()==totalLen and totalLen>0 then
             if totalLen<=200 then
@@ -54,6 +59,7 @@ function clientTask()
     while true do
         local retryCnt = 0
         sProcessedLen = 0
+        otaBegin = false
         while true do
             --sBraekTest = sBraekTest+30
             log.info("update.http.request",sLocation,sUrl,sProcessedLen,sBraekTest,fotastart)
@@ -61,10 +67,10 @@ function clientTask()
             local coreVer = rtos.get_version()
             local coreName1,coreName2 = coreVer:match("(.-)_V%d+(_.+)")
             local coreVersion = tonumber(coreVer:match(".-_V(%d+)"))
-            httpRspCode = nil
+            httpRspCode = nil  
             http.request("GET",
                      sLocation or ((sUrl or "iot.openluat.com/api/site/firmware_upgrade").."?project_key=".._G.PRODUCT_KEY
-                            .."&imei="..misc.getImei()
+                            .."&imei="..(sGetImeiFnc and sGetImeiFnc() or misc.getImei())
                             .."&firmware_name=".._G.PROJECT.."_"..coreName1..coreName2.."&core_version="..coreVersion.."&dfota=1&version=".._G.VERSION..(sRedir and "&need_oss_url=1" or "")),
                      nil,{["Range"]="bytes="..sProcessedLen.."-"},nil,60000,httpDownloadCbFnc,processOta)
                      
@@ -157,4 +163,8 @@ function request(cbFnc,url,period,redir)
     if not sUpdating then        
         sys.taskInit(clientTask)
     end
+end
+
+function setGetImeiCbFnc(cbFnc)
+    sGetImeiFnc = cbFnc
 end

@@ -60,7 +60,9 @@ os.date = safeosdate
 -- 对coroutine.resume加一个修饰器用于捕获协程错误
 local rawcoresume = coroutine.resume
 coroutine.resume = function(...)
+	local arg = { ... }
     function wrapper(co,...)
+		local arg = { ... }
         if not arg[1] then
             local traceBack = debug.traceback(co) or "empty"
             traceBack = (traceBack and traceBack~="") and ((arg[2] or "").."\r\n"..traceBack) or (arg[2] or "")
@@ -72,7 +74,7 @@ coroutine.resume = function(...)
         end
         return unpack(arg)
     end
-    return wrapper(arg[1],rawcoresume(unpack(arg)))
+    return wrapper(arg[1],rawcoresume(...))
 end
 
 os.clockms = function() return rtos.tick()/16 end
@@ -100,7 +102,7 @@ if json and json.decode then json.decode = safeJsonDecode end
 local oldUartWrite = uart.write
 uart.write = function(...)
     pm.wake("lib.patch.uart.write")
-    local result = oldUartWrite(unpack(arg))
+    local result = oldUartWrite(...)
     pm.sleep("lib.patch.uart.write")
     return result
 end
@@ -109,7 +111,7 @@ if i2c and i2c.write then
     local oldI2cWrite = i2c.write
     i2c.write = function(...)
         pm.wake("lib.patch.i2c.write")
-        local result = oldI2cWrite(unpack(arg))
+        local result = oldI2cWrite(...)
         pm.sleep("lib.patch.i2c.write")
         return result
     end
@@ -119,7 +121,7 @@ if i2c and i2c.send then
     local oldI2cSend = i2c.send
     i2c.send = function(...)
         pm.wake("lib.patch.i2c.send")
-        local result = oldI2cSend(unpack(arg))
+        local result = oldI2cSend(...)
         pm.sleep("lib.patch.i2c.send")
         return result
     end
@@ -129,7 +131,7 @@ if spi and spi.send then
     oldSpiSend = spi.send
     spi.send = function(...)
         pm.wake("lib.patch.spi.send")
-        local result = oldSpiSend(unpack(arg))
+        local result = oldSpiSend(...)
         pm.sleep("lib.patch.spi.send")
         return result
     end

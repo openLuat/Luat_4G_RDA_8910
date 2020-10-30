@@ -36,6 +36,7 @@ local NORESULT, NUMBERIC, SLINE, MLINE, STRING, SPECIAL = 0, 1, 2, 3, 4, 10
 --AT命令的应答类型表，预置了如下几项
 local RILCMD = {
     ["+CSQ"] = 2,
+    ["+CESQ"] = 2,
     ["+MUID"] = 2,
     ["+CGSN"] = 1,
     ["+WISN"] = 4,
@@ -44,6 +45,7 @@ local RILCMD = {
     ["+SIMCROSS"] = 2,
     ["+CGATT"] = 2,
     ["+CCLK"] = 2,
+    ['+CNUM'] = 3,
     --["+ATWMFT"] = 4,
     ["+CMGR"] = 3,
     ["+CMGS"] = 2,

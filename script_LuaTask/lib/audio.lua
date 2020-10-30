@@ -46,7 +46,7 @@ local audioQueue = {}
 local sStrategy
 
 local function isTtsStopResultValid()
-    return tonumber(string.match(rtos.get_version(),"Luat_V(%d+)_"))>=8
+    return tonumber(string.match(rtos.get_version(),"(%d+)_RDA"))>=8
 end
 
 
@@ -116,7 +116,22 @@ local function audioTask()
                 setVolume(item.vol)
                 local result
                 if type(item.path)=="table" then
-                    result = audiocore.play(unpack(item.path))
+                    if (item.path[1]):match("%.amr$") or (item.path[1]):match("%.AMR$") then
+                        local dataBuf = {}
+                        for i=1,#item.path do
+                            table.insert(dataBuf,(io.readFile(item.path[i])):sub(i==1 and 1 or 7,-1))
+                        end
+                        result = audiocore.playdata(table.concat(dataBuf),audiocore.AMR)
+                    elseif (item.path[1]):match("%.pcm$") or (item.path[1]):match("%.PCM$") then
+                        local dataBuf = {}
+                        for i=1,#item.path do
+                            table.insert(dataBuf,io.readFile(item.path[i]))
+                        end
+                        result = audiocore.playdata(table.concat(dataBuf),audiocore.PCM)
+                    else
+                        result = false
+                    end
+                    --result = audiocore.play(unpack(item.path))
                 else
                     result = audiocore.play(item.path)
                 end
@@ -384,13 +399,14 @@ end
 
 --- 设置音频输出通道
 -- 设置后实时生效
--- @number[opt=2] channel，1：headphone耳机    2：speaker喇叭
+-- @number[opt=2] channel，0：earphone听筒  1：headphone耳机    2：speaker喇叭
 -- @return nil
 -- @usage
+-- 设置为听筒输出：audio.setChannel(0)
 -- 设置为耳机输出：audio.setChannel(1)
 -- 设置为喇叭输出：audio.setChannel(2)
 function setChannel(channel)
-    if tonumber(string.match(rtos.get_version(),"Luat_V(%d+)_"))>=9 then
+    if tonumber(string.match(rtos.get_version(),"(%d+)_RDA"))>=9 then
         audiocore.setchannel(channel)
     else
         ril.request("AT+AUDCH="..(channel==1 and 1 or 2))

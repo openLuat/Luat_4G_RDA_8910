@@ -1,3 +1,18 @@
+发布时间：2020/10/30 13:27
+修改记录：
+    一、lib脚本修改
+	lib脚本版本号：2.3.5
+	(1)aLiYun.lua：新增setConnectMode接口，可设置为MQTT-TCP直连模式、直连域名、直连端口、clientid生成规则
+	(2)aLiYun.lua：新增setRegion接口，可设置地域id
+	(3)aLiYun.lua：支持连接状态下的主题订阅功能
+	(4)audio.lua：play接口支持一次传入多文件连续拼接播放功能
+	(5)nvm.lua：init接口支持“本地烧录软件时是否擦除nvm中已有的参数”功能
+	(6)cc.lua：修正“通话中发送dtmf失败”的问题
+	(7)net.lua：修正“core概率性不上报^MODE: %d,%d，导致网络逻辑异常”的问题
+	(8)gpsZkw.lua、agpsZkw.lua：支持Air820UX系列模块的gps以及agps功能
+
+
+
 发布时间：2020/07/30 13:48
 修改记录：
     一、lib脚本修改

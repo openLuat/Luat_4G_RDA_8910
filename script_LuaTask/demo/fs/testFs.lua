@@ -79,6 +79,7 @@ end
 
 --打印文件系统的剩余空间
 print("get_fs_free_size: "..rtos.get_fs_free_size().." Bytes")
+sys.timerLoopStart(function() print("get_fs_free_size: "..rtos.get_fs_free_size().." Bytes") end,5000)
 --成功创建一个目录(目录已存在，也返回true表示创建成功)
 if rtos.make_dir(USER_DIR_PATH) then
     log.info("testFs.readfile")

@@ -172,7 +172,7 @@ end
 
 function IsCidActived(cid,data)
 	if not data then return end 
-	for k, v in string.gfind(data, "(%d+),(%d)") do 
+	for k, v in string.gfind(data, "(%d+),%s*(%d)") do 
 		log.info("iscidactived ",k,v)
 		if cid == tonumber(k) and v=='1' then
 			return true
@@ -184,7 +184,7 @@ end
 
 function IsExistActivedCid(data)
 	if not data then return end 
-	for k, v in string.gfind(data, "(%d+),(%d)") do 		
+	for k, v in string.gfind(data, "(%d+),%s*(%d)") do 		
 		if v=='1' then
 			log.info("ExistActivedCid ",k,v)
 			return true

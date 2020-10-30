@@ -161,6 +161,15 @@ function getVbatt()
     return v2
 end
 
+--- 获取VBUS连接状态
+-- @return boolean，true表示VBUS连接，false表示未连接
+-- @usage vbus = getVbus()
+function getVbus()
+    local v1, v2, v3, v4, v5 = pmd.param_get()
+    log.info("misc.getVbus",v1, v2, v3, v4, v5)
+    return v4
+end
+
 --- 获取模块MUID
 -- @return string,MUID号，如果未获取到返回""
 -- 注意：开机lua脚本运行之后，会发送at命令去查询muid，所以需要一定时间才能获取到muid。开机后立即调用此接口，基本上返回""

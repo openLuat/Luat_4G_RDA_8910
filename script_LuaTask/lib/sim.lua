@@ -11,7 +11,7 @@ module(..., package.seeall)
 local req = ril.request
 --sim卡的imsi、sim卡的iccid
 local imsi, iccid, status
-
+local sNumber,bQueryNumber = ""
 local simCross,setSimCrossCbFnc
 
 --- 获取sim卡的iccid
@@ -54,6 +54,23 @@ function getStatus()
     return status
 end
 
+--- 设置“是否打开查询本机号码”的功能
+-- @bool flag，开启或者关闭查询功能的标志，false或者nil为关闭，其余为开启
+-- @return nil
+-- @usage sim.setQueryNumber(true)
+function setQueryNumber(flag)
+    bQueryNumber = flag
+end
+
+--- 获取sim卡的本机号码
+-- @return string ,返回值：sNumber，如果还没有读取出来或者读取失败，则返回""
+-- @usage 注意：开机lua脚本运行之后，会发送at命令去查询本机号码，所以需要一定时间才能获取到本机号码。开机后立即调用此接口，基本上返回""
+-- @usage 注意：此功能需要卡商支持，卡商必须把卡写到sim卡中，模块才能从卡中读出号码；目前市场上的很多卡，没有写入号码，是无法读取得
+-- @usage sim.getMcc()
+function getNumber()
+    return sNumber or ""
+end
+
 --[[
 函数名：rsp
 功能  ：本功能模块内“通过虚拟串口发送到底层core软件的AT命令”的应答处理
@@ -84,6 +101,12 @@ local function rsp(cmd, success, response, intermediate)
         imsi = intermediate
         --产生一个内部消息IMSI_READY，通知已经读取imsi
         sys.publish("IMSI_READY")
+    elseif cmd == "AT+CNUM" then
+        if success then
+            if intermediate then sNumber = intermediate:match("%+CNUM:%s*\".-\",\"[%+]*(%d+)\",") end
+        else
+            sys.timerStart(ril.request,5000,"AT+CNUM")
+        end
     end
 end
 
@@ -104,6 +127,7 @@ local function urc(data, prefix)
             status = true
             ril.request("AT+ICCID")
             ril.request("AT+CIMI")
+            if bQueryNumber then ril.request("AT+CNUM") end
             sys.publish("SIM_IND", "RDY")
         --未检测到sim卡
         elseif data == "+CPIN: NOT INSERTED" then
@@ -153,6 +177,7 @@ end
 ril.regRsp("+ICCID", rsp)
 --注册AT+CIMI命令的应答处理函数
 ril.regRsp("+CIMI", rsp)
+ril.regRsp("+CNUM", rsp)
 ril.regRsp("+SIMCROSS", rsp)
 --注册+CPIN通知的处理函数
 ril.regUrc("+CPIN", urc)

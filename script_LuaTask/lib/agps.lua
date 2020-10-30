@@ -119,6 +119,7 @@ local function setFastFix(lng,lat,tm)
     if checkEph() then updateEph() end
 end
 
+local getloc = 0
 local lbsLocRequesting
 --获取到基站对应的经纬度，写到GPS芯片中
 local function getLocCb(result,lat,lng,addr,time)
@@ -135,6 +136,7 @@ local function getLocCb(result,lat,lng,addr,time)
             end
             gps.open(gps.TIMERORSUC,{tag="lib.agps.lua.fastFix",val=4})
             sys.timerStart(setFastFix,2000,lng,lat,tm)
+            getloc = 1
         end        
     end
     
@@ -143,6 +145,10 @@ local function getLocCb(result,lat,lng,addr,time)
     end    
 end
 
+--是否获取到基站对应的经纬度
+function isgetloc()
+	return getloc
+end
 
 sys.subscribe("GPS_STATE", function(evt,para)
     log.info("agps.GPS_STATE",evt,para)

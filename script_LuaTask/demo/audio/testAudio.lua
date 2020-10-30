@@ -94,6 +94,7 @@ local function tesTtsNew()
     audio.play(TTS,"TTS",ttsStr,7)
 end
 
+--audio.setChannel(1)
 
 --每次打开下面的一种分支进行测试
 if true then
@@ -124,6 +125,48 @@ sys.taskInit(function()
     end
 end)
 ]]
+
+--[[
+sys.taskInit(function()
+    
+    while true do        
+        sys.wait(2000)  
+        
+        --播放多arm文件方式
+        local multiFile = {"/lua/alipay.amr","/lua/10.amr","/lua/2.amr","/lua/yuan.amr"}
+        audio.play(1,"FILE",multiFile,7,function() sys.publish("armMultiTest") end)
+        sys.waitUntil("armMultiTest")
+        
+        sys.wait(2000)
+        
+        --播放多pcm文件方式
+        multiFile = {"/lua/alipay.pcm","/lua/10.pcm","/lua/8.pcm","/lua/yuan.pcm"}
+        audio.play(1,"FILE",multiFile,7,function() sys.publish("armMultiTest") end)
+        sys.waitUntil("armMultiTest")        
+        
+    end
+end)
+]]
+
+--支持audiocore.CLASS_AB和audiocore.CLASS_D两种
+--注意：烧录软件后，第一次开机后需要重启一次，设置才会生效
+--audiocore.setpa(audiocore.CLASS_AB)
+
+sys.taskInit(function()    
+    while true do                
+        audio.play(TTS,"TTS","支付宝收款242425元",3,function() sys.publish("PLAY_END") end)
+        sys.waitUntil("PLAY_END")
+        
+        audio.play(TTS,"TTS","支付宝收款303000元",3,function() sys.publish("PLAY_END") end)
+        sys.waitUntil("PLAY_END")
+        
+        audio.play(TTS,"TTS","支付宝收款6003000元",3,function() sys.publish("PLAY_END") end)
+        sys.waitUntil("PLAY_END")
+    end
+end)
+
+
+
 
 
 

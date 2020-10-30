@@ -13,7 +13,8 @@ module(..., package.seeall)
 --para：实时参数表
 --config：默认参数表
 paraname, paranamebak = "/nvm_para.lua", "/nvm_para_bak.lua"
-local para, libdftconfig, configname, econfigname = {}
+local para, libdftconfig, configname, cconfigname, econfigname = {}
+local sBurnSave
 
 --[[
 函数名：serialize
@@ -75,7 +76,7 @@ end
 
 local function safePcall(file)
     local oldPath = package.path
-    package.path = "/?.lua;" .. "/?.luae;" .. package.path
+    package.path = "/?.lua;".."/?.luae;".."/#lua_user#/?.lua;".."/#lua_user#/?.luae;"..package.path
     local result, para = pcall(require, file)
     package.path = oldPath
     return result, para
@@ -104,8 +105,12 @@ local function load()
     print("load fExist fBakExist", fExist, fBakExist)
     
     local fResult, fBakResult
-    if fExist then
-        fResult, para = safePcall(paraname:match("/(.+)%.lua"))
+    if fExist then        
+        if sBurnSave then
+            fResult, para = safePcall(paraname:match("/#lua_user#/(.+)%.lua"))
+        else
+            fResult, para = safePcall(paraname:match("/(.+)%.lua"))
+        end
     end
     
     print("load fResult", fResult)
@@ -117,7 +122,11 @@ local function load()
     end
     
     if fBakExist then
-        fBakResult, para = safePcall(paranamebak:match("/(.+)%.lua"))
+        if sBurnSave then
+            fBakResult, para = safePcall(paranamebak:match("/#lua_user#/(.+)%.lua"))
+        else
+            fBakResult, para = safePcall(paranamebak:match("/(.+)%.lua"))
+        end
     end
     
     print("load fBakResult", fBakResult)
@@ -165,12 +174,20 @@ end
 
 --- 初始化参数存储模块
 -- @string defaultCfgFile 默认配置文件名
+-- @bool burnSave 本地烧录是否保留已有参数，true为保留，false或者nil为清除
 -- @return nil
 -- @usage nvm.init("config.lua")
-function init(defaultCfgFile)
+function init(defaultCfgFile,burnSave)
     local f
     f, libdftconfig = safePcall(defaultCfgFile:match("(.+)%.lua"))
-    configname, econfigname = "/lua/" .. defaultCfgFile, "/lua/" .. defaultCfgFile .. "c"
+    configname, cconfigname, econfigname = "/lua/" .. defaultCfgFile, "/lua/" .. defaultCfgFile .. "c", "/lua/" .. defaultCfgFile .. "e"
+    
+    sBurnSave = burnSave
+    if burnSave then
+        rtos.make_dir("/#lua_user#")
+        paraname, paranamebak = "/#lua_user#/nvm_para.lua", "/#lua_user#/nvm_para_bak.lua"
+    end
+    
     --初始化配置文件，从文件中把参数读取到内存中
     load()
 end
@@ -253,6 +270,7 @@ function restore()
     os.remove(paraname)
     os.remove(paranamebak)
     local fpara, fconfig = io.open(paraname, "wb"), io.open(configname, "rb")
+    if not fconfig then fconfig = io.open(cconfigname, "rb") end
     if not fconfig then fconfig = io.open(econfigname, "rb") end
     fpara:write(fconfig:read("*a"))
     fpara:close()

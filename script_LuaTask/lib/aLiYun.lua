@@ -13,6 +13,9 @@ require"mqtt"
 module(..., package.seeall)
 
 local sProductKey,sProductSecret,sGetDeviceNameFnc,sGetDeviceSecretFnc,sSetDeviceSecretFnc
+local sRegion = "cn-shanghai"
+--连接方式
+local sConnectMode,sConnectHost,sConnectPort,sGetClientIdFnc
 local sKeepAlive,sCleanSession,sWill
 local isSleep--休眠，不去重连服务器
 local sErrHandleCo,sErrHandleCb,sErrHandleTmout
@@ -37,9 +40,11 @@ local function procSubscribe(client)
     local i
     for i=1,#outQueue["SUBSCRIBE"] do
         if not client:subscribe(outQueue["SUBSCRIBE"][i].t,outQueue["SUBSCRIBE"][i].q) then
+            outQueue["SUBSCRIBE"] = {}
             return false,"procSubscribe"
         end
     end
+    outQueue["SUBSCRIBE"] = {}
     return true
 end
 
@@ -61,7 +66,11 @@ local function procReceive(client)
             end
             
             --如果有等待发送的数据，则立即退出本循环
-            if #outQueue["PUBLISH"]>0 then return true,"procReceive" end
+            if #outQueue["PUBLISH"]>0 then
+                return true,"procReceive"
+            else
+                if sErrHandleCo then coroutine.resume(sErrHandleCo,"feed") end
+            end
         elseif data == "aliyun_publish_ind" and s:find("disconnect") then--主动断开
             client:disconnect()
             return false,"procReceive"
@@ -77,11 +86,18 @@ local function procReceive(client)
 end
 
 local function procSend(client)
+    if not procSubscribe(client) then
+        return false,"procSubscribe"
+    end
     while #outQueue["PUBLISH"]>0 do
         local item = table.remove(outQueue["PUBLISH"],1)
         local result = client:publish(item.t,item.p,item.q)
         if item.cb then item.cb(result,item.para) end
-        if not result then return false,"procSend" end
+        if not result then
+            return false,"procSend" 
+        else
+            if sErrHandleCo then coroutine.resume(sErrHandleCo,"feed") end
+        end
     end
     return true,"procSend"
 end
@@ -130,13 +146,12 @@ function clientDataTask(host,tPorts,clientId,user,password)
             local mqttClient = mqtt.client(clientId,sKeepAlive or 240,user,password,sCleanSession,sWill)
             portIdx = portIdx%(#tPorts)+1
             
-            if mqttClient:connect(host,tonumber(tPorts[portIdx]),"tcp_ssl") then
+            if mqttClient:connect(host,tonumber(tPorts[portIdx]),sConnectMode=="direct" and "tcp" or "tcp_ssl") then
                 retryConnectCnt = 0
                 if aLiYunOta and aLiYunOta.connectCb then aLiYunOta.connectCb(true,sProductKey,sGetDeviceNameFnc()) end
                 if evtCb["connect"] then evtCb["connect"](true) end
 
-                local result,prompt = procSubscribe(mqttClient)
-                outQueue["SUBSCRIBE"] = {}
+                local result,prompt = procSubscribe(mqttClient)                
                 if result then
                     local procs,k,v = {procSend,procReceive}
                     while true do
@@ -159,6 +174,7 @@ function clientDataTask(host,tPorts,clientId,user,password)
                 if evtCb["connect"] then evtCb["connect"](false) end
             else
                 retryConnectCnt = retryConnectCnt+1
+                if evtCb["reconnect"] then evtCb["reconnect"]() end
             end          
 
             mqttClient:disconnect()
@@ -211,7 +227,7 @@ function clientAuthTask()
         local retryCnt,authBody = 0,getBody("auth")
         while true do
             http.request("POST",
-                     "https://iot-auth.cn-shanghai.aliyuncs.com/auth/devicename",
+                     "https://iot-auth."..sRegion..".aliyuncs.com/auth/devicename",
                      nil,{["Content-Type"]="application/x-www-form-urlencoded"},authBody,20000,authCbFnc)
                      
             local _,result,statusCode,body = sys.waitUntil("ALIYUN_AUTH_IND")
@@ -232,7 +248,7 @@ function clientAuthTask()
                             end
                         end
                         
-                        sys.taskInit(clientDataTask,returnMqtt and host or sProductKey..".iot-as-mqtt.cn-shanghai.aliyuncs.com",#ports~=0 and ports or {1883},sGetDeviceNameFnc(),tJsonDecode["data"]["iotId"],tJsonDecode["data"]["iotToken"])	
+                        sys.taskInit(clientDataTask,returnMqtt and host or sProductKey..".iot-as-mqtt."..sRegion..".aliyuncs.com",#ports~=0 and ports or {1883},sGetDeviceNameFnc(),tJsonDecode["data"]["iotId"],tJsonDecode["data"]["iotToken"])	
                         return
                     end
                 end
@@ -242,7 +258,7 @@ function clientAuthTask()
             end
 
             if sProductSecret and invalidSign then
-                http.request("POST","https://iot-auth.cn-shanghai.aliyuncs.com/auth/register/device",nil,
+                http.request("POST","https://iot-auth."..sRegion..".aliyuncs.com/auth/register/device",nil,
                     {['Content-Type']="application/x-www-form-urlencoded"},
                     getBody("register"),30000,getDeviceSecretCb)
                 sys.waitUntil("GetDeviceSecretEnd")
@@ -261,11 +277,27 @@ function clientAuthTask()
     end
 end
 
+local function clientDirectTask()
+    while not socket.isReady() do sys.waitUntil("IP_READY_IND") end
+    local tm=os.time()
+    local clientId = (sGetClientIdFnc and sGetClientIdFnc() or sGetDeviceNameFnc()).."|securemode=3,timestamp=2524608000000,signmethod=hmacsha1|"
+    local userName = sGetDeviceNameFnc().."&"..sProductKey
+    
+    local content = "clientId"..(sGetClientIdFnc and sGetClientIdFnc() or sGetDeviceNameFnc()).."deviceName"..sGetDeviceNameFnc().."productKey"..sProductKey.."timestamp2524608000000"
+    local signKey= sGetDeviceSecretFnc()        
+    local password = crypto.hmac_sha1(content,content:len(),signKey,signKey:len())
+    
+    log.info("aLiYun.clientDirectTask",clientId,userName,password)
+    
+    sys.taskInit(clientDataTask,sConnectHost or (sProductKey..".iot-as-mqtt."..sRegion..".aliyuncs.com"),{sConnectPort},clientId,userName,password)
+end
+
 --- 配置阿里云物联网套件的产品信息和设备信息
 -- @string productKey，产品标识
 -- @string[opt=nil] productSecret，产品密钥
 -- 一机一密认证方案时，此参数传入nil
 -- 一型一密认证方案时，此参数传入真实的产品密钥
+-- MQTT-TCP直连方案时，此参数传入nil
 -- @function getDeviceNameFnc，获取设备名称的函数
 -- @function getDeviceSecretFnc，获取设备密钥的函数
 -- @function[opt=nil] setDeviceSecretFnc，设置设备密钥的函数，一型一密认证方案才需要此参数
@@ -275,7 +307,11 @@ end
 -- aLiYun.setup("a1AoVqkCIbG","7eCdPyR6fYPntFcM",getDeviceNameFnc,getDeviceSecretFnc,setDeviceSecretFnc)
 function setup(productKey,productSecret,getDeviceNameFnc,getDeviceSecretFnc,setDeviceSecretFnc)
     sProductKey,sProductSecret,sGetDeviceNameFnc,sGetDeviceSecretFnc,sSetDeviceSecretFnc = productKey,productSecret,getDeviceNameFnc,getDeviceSecretFnc,setDeviceSecretFnc
-    sys.taskInit(clientAuthTask)
+    if sConnectMode=="direct" then        
+        sys.taskInit(clientDirectTask)
+    else
+        sys.taskInit(clientAuthTask)
+    end
 end
 
 --- 设置MQTT数据通道的参数
@@ -291,6 +327,34 @@ function setMqtt(cleanSession,will,keepAlive)
     sCleanSession,sWill,sKeepAlive = cleanSession,will,keepAlive
 end
 
+
+--- 设置地域region id
+-- @string region，地域id字符串，参考：https://help.aliyun.com/document_detail/40654.html?spm=a2c4g.11186623.2.16.c0a63f82Z7qCtA#concept-h4v-j5k-xdb
+-- @return nil
+-- @usage
+-- 设置华北1：aLiYun.setRegion("cn-qingdao")
+-- 设置华东1：aLiYun.setRegion("cn-hangzhou")
+-- 设置华南1：aLiYun.setRegion("cn-shenzhen")
+function setRegion(region)
+    sRegion = region
+end
+
+--- 设置连接方式
+-- @string mode，连接方式，支持如下几种方式：
+--                         "direct"表示MQTT-TCP直连
+-- @string host，服务器地址
+-- @number port，服务器端口
+-- @function getClientIdFnc，获取mqtt client id的函数
+-- @return nil
+-- @usage
+-- 设置为MQTT-TCP直连：aLiYun.setConnectMode("direct")
+function setConnectMode(mode,host,port,getClientIdFnc)
+    sConnectMode = mode
+    sConnectHost = host
+    sConnectPort = port or 1883
+    sGetClientIdFnc = getClientIdFnc
+end
+
 --- 订阅主题
 -- @param topic，string或者table类型，一个主题时为string类型，多个主题时为table类型，主题内容为UTF8编码
 -- @param qos，number或者nil，topic为一个主题时，qos为number类型(0/1/2，默认0)；topic为多个主题时，qos为nil
@@ -299,7 +363,8 @@ end
 -- aLiYun.subscribe("/b0FMK1Ga5cp/862991234567890/get", 0)
 -- aLiYun.subscribe({["/b0FMK1Ga5cp/862991234567890/get"] = 0, ["/b0FMK1Ga5cp/862991234567890/get"] = 1})
 function subscribe(topic,qos)
-	insert("SUBSCRIBE",topic,qos)
+    insert("SUBSCRIBE",topic,qos)
+    sys.publish("aliyun_publish_ind","send")
 end
 
 --- 发布一条消息
@@ -323,6 +388,7 @@ end
 -- @string evt，事件
 -- "auth"表示鉴权服务器认证结果事件
 -- "connect"表示接入服务器连接结果事件
+-- "reconnect"表示重连事件
 -- "receive"表示接收到接入服务器的消息事件
 -- @function cbFnc，事件的处理函数
 -- 当evt为"auth"时，cbFnc的调用形式为：cbFnc(result)，result为true表示认证成功，false或者nil表示认证失败
