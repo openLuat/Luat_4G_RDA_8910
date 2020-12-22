@@ -20,6 +20,7 @@
 -- require "mono_lcd_spi_st7567"
 require "color_lcd_spi_st7735"
 --require "color_lcd_spi_gc9106l"
+--require "color_lcd_spi_gc9a01"
 --require "mono_i2c_ssd1306"
 module(..., package.seeall)
 

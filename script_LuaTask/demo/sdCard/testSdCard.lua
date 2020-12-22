@@ -4,7 +4,7 @@ require"audio"
 
 function sdCardTask()
     sys.wait(5000)
-    --挂载SD卡
+    --挂载SD卡,返回值0表示失败，1表示成功
     io.mount(io.SDCARD)
     
     --第一个参数1表示sd卡
@@ -37,7 +37,7 @@ function sdCardTask()
     audio.play(0,"FILE","/sdcard0/pwron.mp3",audiocore.VOL7,function() sys.publish("AUDIO_PLAY_END") end)
     sys.waitUntil("AUDIO_PLAY_END")    
     
-    --卸载SD卡
+    --卸载SD卡，返回值0表示失败，1表示成功
     io.unmount(io.SDCARD)
 end
 

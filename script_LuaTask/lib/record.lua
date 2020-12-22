@@ -16,6 +16,7 @@ local recording,stoping,recordCb,stopCbFnc
 
 --- 开始录音
 -- @number seconds，录音时长，单位：秒
+--     流录音模式下，如果想长时间录音，可以将此参数设置为0x7FFFFFFF，相当于录音2147483647秒=24855天
 -- @function[opt=nil] cbFnc，录音回调函数：
 --     当type参数为"FILE"时，回调函数的调用形式为：
 --         cbFnc(result,size)

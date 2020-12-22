@@ -15,7 +15,7 @@ module(..., package.seeall)
 local sProductKey,sProductSecret,sGetDeviceNameFnc,sGetDeviceSecretFnc,sSetDeviceSecretFnc
 local sRegion = "cn-shanghai"
 --连接方式
-local sConnectMode,sConnectHost,sConnectPort,sGetClientIdFnc
+local sConnectMode,sConnectHost,sConnectPort,sGetClientIdFnc,sGetUserNameFnc,sGetPasswordFnc
 local sKeepAlive,sCleanSession,sWill
 local isSleep--休眠，不去重连服务器
 local sErrHandleCo,sErrHandleCb,sErrHandleTmout
@@ -281,11 +281,17 @@ local function clientDirectTask()
     while not socket.isReady() do sys.waitUntil("IP_READY_IND") end
     local tm=os.time()
     local clientId = (sGetClientIdFnc and sGetClientIdFnc() or sGetDeviceNameFnc()).."|securemode=3,timestamp=2524608000000,signmethod=hmacsha1|"
-    local userName = sGetDeviceNameFnc().."&"..sProductKey
+    local userName = sGetUserNameFnc and sGetUserNameFnc() or (sGetDeviceNameFnc().."&"..sProductKey)
     
-    local content = "clientId"..(sGetClientIdFnc and sGetClientIdFnc() or sGetDeviceNameFnc()).."deviceName"..sGetDeviceNameFnc().."productKey"..sProductKey.."timestamp2524608000000"
-    local signKey= sGetDeviceSecretFnc()        
-    local password = crypto.hmac_sha1(content,content:len(),signKey,signKey:len())
+    local password
+    
+    if sGetPasswordFnc then
+        password = sGetPasswordFnc()
+    else
+        local content = "clientId"..(sGetClientIdFnc and sGetClientIdFnc() or sGetDeviceNameFnc()).."deviceName"..sGetDeviceNameFnc().."productKey"..sProductKey.."timestamp2524608000000"
+        local signKey= sGetDeviceSecretFnc()        
+        password = crypto.hmac_sha1(content,content:len(),signKey,signKey:len())
+    end
     
     log.info("aLiYun.clientDirectTask",clientId,userName,password)
     
@@ -345,19 +351,23 @@ end
 -- @string host，服务器地址
 -- @number port，服务器端口
 -- @function getClientIdFnc，获取mqtt client id的函数
+-- @function getUserNameFnc，获取mqtt client userName的函数
+-- @function getPasswordFnc，获取mqtt client password的函数
 -- @return nil
 -- @usage
 -- 设置为MQTT-TCP直连：aLiYun.setConnectMode("direct")
-function setConnectMode(mode,host,port,getClientIdFnc)
+function setConnectMode(mode,host,port,getClientIdFnc,getUserNameFnc,getPasswordFnc)
     sConnectMode = mode
     sConnectHost = host
     sConnectPort = port or 1883
     sGetClientIdFnc = getClientIdFnc
+    sGetUserNameFnc = getUserNameFnc
+    sGetPasswordFnc = getPasswordFnc
 end
 
 --- 订阅主题
 -- @param topic，string或者table类型，一个主题时为string类型，多个主题时为table类型，主题内容为UTF8编码
--- @param qos，number或者nil，topic为一个主题时，qos为number类型(0/1/2，默认0)；topic为多个主题时，qos为nil
+-- @param qos，number或者nil，topic为一个主题时，qos为number类型(0/1，默认0)；topic为多个主题时，qos为nil
 -- @return nil
 -- @usage
 -- aLiYun.subscribe("/b0FMK1Ga5cp/862991234567890/get", 0)
@@ -370,7 +380,7 @@ end
 --- 发布一条消息
 -- @string topic，UTF8编码的主题
 -- @string payload，负载
--- @number[opt=0] qos，质量等级，0/1/2，默认0
+-- @number[opt=0] qos，质量等级，0/1，默认0
 -- @function[opt=nil] cbFnc，消息发布结果的回调函数
 -- 回调函数的调用形式为：cbFnc(result,cbPara)。result为true表示发布成功，false或者nil表示订阅失败；cbPara为本接口中的第5个参数
 -- @param[opt=nil] cbPara，消息发布结果回调函数的回调参数

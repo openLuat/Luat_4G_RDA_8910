@@ -128,6 +128,12 @@ local function audioTask()
                             table.insert(dataBuf,io.readFile(item.path[i]))
                         end
                         result = audiocore.playdata(table.concat(dataBuf),audiocore.PCM)
+                    elseif (item.path[1]):match("%.mp3$") or (item.path[1]):match("%.MP3$") then
+                        local dataBuf = {}
+                        for i=1,#item.path do
+                            table.insert(dataBuf,io.readFile(item.path[i]))
+                        end
+                        result = audiocore.playdata(table.concat(dataBuf),audiocore.MP3)
                     else
                         result = false
                     end

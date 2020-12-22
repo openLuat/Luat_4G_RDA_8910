@@ -10,7 +10,7 @@ require "patch"
 module(..., package.seeall)
 
 -- lib脚本版本号，只要lib中的任何一个脚本做了修改，都需要更新此版本号
-SCRIPT_LIB_VER = "2.3.5"
+SCRIPT_LIB_VER = "2.3.6"
 
 -- TaskID最大值
 local TASK_TIMER_ID_MAX = 0x1FFFFFFF
@@ -298,7 +298,7 @@ function unsubscribe(id, callback)
         log.warn("warning: sys.unsubscribe invalid parameter", id, callback)
         return
     end
-    if subscribers[id] then subscribers[id][callback] = false end
+    if subscribers[id] then subscribers[id][callback] = nil end
 end
 
 --- 发布内部消息，存储在内部消息队列中

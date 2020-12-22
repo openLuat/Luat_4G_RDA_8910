@@ -97,6 +97,7 @@ end
 --audio.setChannel(1)
 
 --每次打开下面的一种分支进行测试
+
 if true then
     if string.match(rtos.get_version(),"TTS") then
         sys.timerStart(testPlayTts,5000)
@@ -111,7 +112,6 @@ else
     --5秒后，开始录音6秒，之后进行播放冲突测试接口
     --sys.timerStart(record.start,5000,6,testPlayConflict)
 end
-
 
 --[[
 sys.taskInit(function()
@@ -151,7 +151,7 @@ end)
 --支持audiocore.CLASS_AB和audiocore.CLASS_D两种
 --注意：烧录软件后，第一次开机后需要重启一次，设置才会生效
 --audiocore.setpa(audiocore.CLASS_AB)
-
+--[[
 sys.taskInit(function()    
     while true do                
         audio.play(TTS,"TTS","支付宝收款242425元",3,function() sys.publish("PLAY_END") end)
@@ -164,7 +164,27 @@ sys.taskInit(function()
         sys.waitUntil("PLAY_END")
     end
 end)
+]]
 
+--audio.setTTSSpeed(5)
+--pcall(audiocore.pa,13,2)
+--audiocore.setpa(audiocore.CLASS_D)
+--audio.setChannel(1)
+
+--[[
+sys.taskInit(function()
+    
+    while true do        
+        sys.wait(2000)  
+        
+        --播放多mp3文件方式
+        local multiFile = {"/lua/0.mp3","/lua/1.mp3","/lua/2.mp3","/lua/3.mp3","/lua/4.mp3"}
+        audio.play(1,"FILE",multiFile,2,function() sys.publish("mp3MultiTest") end)
+        sys.waitUntil("mp3MultiTest") 
+        
+    end
+end)
+]]
 
 
 

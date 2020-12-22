@@ -135,7 +135,7 @@ local function urc(data, prefix)
         else
             --sim卡pin开启
             if data == "+CPIN: SIM PIN" then
-                sys.publish("SIM_IND_SIM_PIN")
+                sys.publish("SIM_IND","SIM_PIN")
             end
             sys.publish("SIM_IND", "NORDY")
         end

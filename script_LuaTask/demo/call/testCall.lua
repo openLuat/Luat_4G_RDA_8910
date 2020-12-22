@@ -27,6 +27,8 @@ local function connected(num)
     coIncoming = nil
     --通话中音量测试
     sys.timerLoopStart(callVolTest,5000)
+    --通话中向对方播放TTS测试
+    audio.play(7,"TTS","通话中TTS测试",7,nil,true,2000)
     --110秒之后主动结束通话
     sys.timerStart(cc.hangUp,110000,num)
 end

@@ -36,23 +36,23 @@ local NTP_TIMEOUT = 8000
 -- 同步是否完成标记
 local ntpEnd = false
 
---- 获取NTP服务器地址列表
+-- 获取NTP服务器地址列表
 -- @return table,服务器地址列表
 -- @usage local addtable = ntp.getServers()
 function getServers()
     return timeServer
 end
 
---- 设置NTP服务器地址列表
--- @param st,tab类型，服务器地址列表
+-- 设置NTP服务器地址列表
+-- @table st,tab类型，服务器地址列表
 -- @return 无
 -- @usage ntp.getServers({"1edu.ntp.org.cn","cn.ntp.org.cn"})
 function setServers(st)
     timeServer = st
 end
 
---- NTP同步标志
--- @return boole,NTP的同步状态true为成功,fasle为失败
+-- NTP同步标志
+-- @return bool,NTP的同步状态true为成功,fasle为失败
 -- @usage local sta = ntp.isEnd()
 function isEnd()
     return ntpEnd
@@ -61,10 +61,10 @@ end
 local sTs,sFnc,sFun
 
 --- 同步时间，每个NTP服务器尝试3次，超时8秒,适用于被任务函数调用
--- @param ts,每隔ts小时同步1次
--- @param fnc,同步成功后回调函数
--- @param fun,同步成功前回调函数
--- @return 无
+-- @number ts,每隔ts小时同步1次
+-- @function fnc,同步成功后回调函数
+-- @function fun,同步成功前回调函数
+-- @return nil
 -- @usage ntp.ntpTime() -- 只同步1次
 -- @usage ntp.ntpTime(1) -- 1小时同步1次
 -- @usage ntp.ntpTime(nil,fnc) -- 只同步1次，同步成功后执行fnc()
@@ -119,16 +119,16 @@ function ntpTime(ts, fnc, fun)
         end
     end
 end
----  自动同步时间任务适合独立执行.
+--- 自动同步时间任务，适合独立执行.
 -- 重要提醒！！！！！！
 -- 本功能模块采用多个免费公共的NTP服务器来同步时间
 -- 并不能保证任何时间任何地点都能百分百同步到正确的时间
 -- 所以，如果用户项目中的业务逻辑严格依赖于时间同步功能
 -- 则不要使用使用本功能模块，建议使用自己的应用服务器来同步时间
--- @return 无
--- @param ts,每隔ts小时同步1次
--- @param fnc,同步成功后回调函数
--- @param fun,同步成功前回调函数
+-- @number ts,每隔ts小时同步1次
+-- @function fnc,同步成功后回调函数
+-- @function fun,同步成功前回调函数
+-- @return nil
 -- @usage ntp.timeSync() -- 只同步1次
 -- @usage ntp.timeSync(1) -- 1小时同步1次
 -- @usage ntp.timeSync(nil,fnc) -- 只同步1次，同步成功后执行fnc()

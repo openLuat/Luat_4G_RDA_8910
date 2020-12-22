@@ -8,7 +8,7 @@
 module(...,package.seeall)
 
 require"utils"
-
+require "common"
 --[[
 加解密算法结果，可对照
 http://tool.oschina.net/encrypt?type=2
@@ -352,6 +352,61 @@ local function rsaTest()
     verifyResult = crypto.rsa_sha256_verify("PUBLIC_KEY",io.readFile("/lua/public.key"),2048,"PUBLIC_CRYPT",signStr,"firmId=10015&model=zw-sp300&sn=W01201910300000108&version=1.0.0")
     log.info("rsaTest.verifyResult customer",verifyResult)
 end
+--DES算法测试
+
+local function desTest()
+
+        local originStr = "123456781234"
+		--加密模式：DES CBC；填充方式：ZERO；密钥：12345678; 偏移：00000000
+        encodeStr = crypto.des_encrypt("CBC","ZERO",originStr,"12345678","00000000")
+		print(originStr,"DES ECB ZeroPadding encrypt",string.toHex(encodeStr))
+        log.info("DES ECB ZeroPadding decrypt",crypto.des_decrypt("CBC","ZERO",encodeStr,"12345678","00000000"))
+        
+		originStr = "123456789"
+        --加密模式：DES CBC；填充方式：Pkcs5Padding；密钥：12345678; 偏移：00000000
+        encodeStr = crypto.des_encrypt("CBC","PKCS5",originStr,"12345678","00000000")
+        print(originStr,"DES ECB Pkcs5Padding encrypt",string.toHex(encodeStr))
+        log.info("DES ECB Pkcs5Padding decrypt",crypto.des_decrypt("CBC","PKCS5",encodeStr,"12345678","00000000"))  
+        
+        originStr = "123456789"
+        --加密模式：DES ECB；填充方式：Pkcs7Padding；密钥：12345678
+        encodeStr = crypto.des_encrypt("ECB","PKCS7",originStr,"12345678","12345678")
+        print(originStr,"DES ECB Pkcs7Padding encrypt",string.toHex(encodeStr))
+        log.info("DES ECB Pkcs7Padding decrypt",crypto.des_decrypt("ECB","PKCS7",encodeStr,"12345678"))
+        
+        originStr = ("31323334353637383900000000000000"):fromHex()
+        --加密模式：DES ECB；填充方式：NONE；密钥：12345678
+        encodeStr = crypto.des_encrypt("ECB","NONE",originStr,"12345678")
+        print(originStr,"DES ECB NonePadding encrypt",string.toHex(encodeStr))
+        log.info("DES ECB NonePadding decrypt",string.toHex(crypto.des_decrypt("ECB","NONE",encodeStr,"12345678")))
+end
+--DES3算法测试
+local function des3Test()
+
+        local originStr = "123456781234"
+		--加密模式：DES CBC；填充方式：ZERO；密钥：123456781234567812345678; 偏移：00000000
+        encodeStr = crypto.des3_encrypt("CBC","ZERO",originStr,"123456781234567812345678","00000000")
+		print(originStr,"DES ECB ZeroPadding encrypt",string.toHex(encodeStr))
+        log.info("DES ECB ZeroPadding decrypt",crypto.des3_decrypt("CBC","ZERO",encodeStr,"123456781234567812345678","00000000"))
+        
+		originStr = "123456789"
+        --加密模式：DES CBC；填充方式：Pkcs5Padding；密钥：123456781234567812345678; 偏移：00000000
+        encodeStr = crypto.des3_encrypt("CBC","PKCS5",originStr,"123456781234567812345678","00000000")
+        print(originStr,"DES ECB Pkcs5Padding encrypt",string.toHex(encodeStr))
+        log.info("DES ECB Pkcs5Padding decrypt",crypto.des3_decrypt("CBC","PKCS5",encodeStr,"123456781234567812345678","00000000"))  
+        
+        originStr = "123456789"
+        --加密模式：DES ECB；填充方式：Pkcs7Padding；密钥：123456781234567812345678
+        encodeStr = crypto.des3_encrypt("ECB","PKCS7",originStr,"123456781234567812345678","123456781234567812345678")
+        print(originStr,"DES ECB Pkcs7Padding encrypt",string.toHex(encodeStr))
+        log.info("DES ECB Pkcs7Padding decrypt",crypto.des3_decrypt("ECB","PKCS7",encodeStr,"123456781234567812345678"))
+        
+        originStr = ("31323334353637383900000000000000"):fromHex()
+        --加密模式：DES ECB；填充方式：NONE；密钥：123456781234567812345678
+        encodeStr = crypto.des3_encrypt("ECB","NONE",originStr,"123456781234567812345678")
+        print(originStr,"DES ECB NonePadding encrypt",string.toHex(encodeStr))
+        log.info("DES ECB NonePadding decrypt",string.toHex(crypto.des3_decrypt("ECB","NONE",encodeStr,"123456781234567812345678")))
+end
 
 --- 算法测试入口
 -- @return
@@ -369,7 +424,11 @@ local function cryptoTest()
     hmacSha256Test()
     xxteaTest()
     print(pcall(rsaTest))
+    desTest()
+    des3Test()
     print("test end")
 end
 
 sys.timerStart(cryptoTest,6000)
+
+

@@ -9,8 +9,9 @@ local req = ril.request
 module(..., package.seeall)
 --sn：序列号
 --imei：IMEI
--- calib 校准标志
-local sn, imei, calib, ver, muid
+--calib: 校准标志
+--ant: 耦合测试标志位
+local sn, imei, calib, ver, muid, ant
 local setSnCbFnc,setImeiCbFnc,setClkCbFnc
 
 local function timeReport()
@@ -61,6 +62,18 @@ local function rsp(cmd, success, response, intermediate)
         else
             if setSnCbFnc then setSnCbFnc(false) end
         end
+	elseif cmd:match("AT%+CALIBINFO%?") then
+		if intermediate then
+			local LTE_afc = intermediate:match("LTE_afc:(%d)")
+			local LTE_TDD_agc = intermediate:match("LTE_TDD_agc:(%d)")
+			local LTE_TDD_apc = intermediate:match("LTE_TDD_apc:(%d)")
+			local LTE_FDD_agc = intermediate:match("LTE_FDD_agc:(%d)")
+			local LTE_FDD_apc = intermediate:match("LTE_FDD_apc:(%d)")
+			local ANT_LTE = intermediate:match("ANT_LTE:(%d)")
+			
+			calib = (LTE_afc == "1" and LTE_TDD_agc == "1" and LTE_TDD_apc == "1" and LTE_FDD_agc == "1" and LTE_FDD_apc == "1")
+			ant = (ANT_LTE == "1")
+		end
     elseif cmd:match("AT%+WIMEI=") then
         if success then
             req("AT+CGSN")
@@ -108,6 +121,13 @@ end
 -- @usage calib = misc.getCalib()
 function getCalib()
     return calib
+end
+
+--- 获取耦合测试标志
+-- @return bool ant, true表示已耦合测试，false或者nil表示未耦合测试
+-- @usage ant = misc.getAnt()
+function getAnt()
+	return ant
 end
 --- 设置SN
 -- @string s,新sn的字符串
@@ -193,6 +213,8 @@ end
 -- @return nil
 -- @usage
 -- 通道0，频率为50000Hz，占空比为0.2：
+-- 频率为50000Hz，表示时钟周期为1/50000=0.00002秒=0.02毫秒=20微秒  
+-- 占空比表示在一个时钟周期内，高电平的时长/时钟周期的时长，本例子中的0.2就表示，高电平时长为4微秒，低电平时长为16微秒
 -- misc.openPwm(0,500,100)
 --
 -- 通道1，时钟周期为500ms，高电平时间为125毫秒：
@@ -219,6 +241,7 @@ ril.regRsp("+MUID", rsp)
 ril.regRsp("+WIMEI", rsp)
 ril.regRsp("+AMFAC", rsp)
 ril.regRsp('+VER', rsp, 4, '^[%w_]+$')
+ril.regRsp("+CALIBINFO",rsp)
 req('AT+VER')
 --查询序列号
 req("AT+WISN?")

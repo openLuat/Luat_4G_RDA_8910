@@ -14,7 +14,7 @@ local smatch,sfind,slen,ssub,sbyte,sformat,srep = string.match,string.find,strin
 local openFlag
 --GPS定位标志，"2D"表示2D定位，"3D"表示3D定位，其余表示未定位
 --GPS定位标志，true表示，其余表示未定位
-local fixFlag
+local fixFlag,fixOnece=nil,nil
 --GPS定位成功后，过滤掉前filterSeconds秒的经纬度信息
 --是否已经过滤完成
 local filterSeconds,filteredFlag = 0
@@ -61,6 +61,9 @@ local nmeaInterval = 1000
 --8，自动低功耗模式，可以通过串口唤醒
 --9, 自动超低功耗跟踪模式，需要force on来唤醒
 local runMode = 0
+
+--gps 的串口线程是否在工作；
+local taskFlag=false
 --runMode为1或者2时，GPS运行状态和休眠状态的时长
 local runTime,sleepTime
 
@@ -147,7 +150,7 @@ local function parseNmea(s)
     if smatch(s,"GGA") then
         lat,latTyp,lng,lngTyp,gpsFind,locSateCnt,hdp,altd,sep = smatch(s,"GGA,%d+%.%d+,(%d+%.%d+),([NS]),(%d+%.%d+),([EW]),(%d),(%d+),([%d%.]*),(.*),M,(.*),M")
         if (gpsFind=="1" or gpsFind=="2" or gpsFind=="4") and altd then
-            fixed = true
+            --fixed = true
             altitude = altd
             latitudeType,longitudeType,latitude,longitude = latTyp,lngTyp,lat,lng
             usedSateCnt = locSateCnt
@@ -198,6 +201,7 @@ local function parseNmea(s)
     if fixed then
         if not fixFlag then
             fixFlag,filteredFlag = true,true
+            fixOnece=true
             fixFailCnt = 0
             sys.publish("GPS_STATE","LOCATION_SUCCESS")
         end
@@ -217,7 +221,10 @@ local function taskRead()
     local cacheData = ""
     local co = coroutine.running()
     while true do
-        local s = uart.read(uartID, "*l")
+        local s =""
+        if openFlag then
+           s= uart.read(uartID, "*l")
+        end
         if s == "" then
             uart.on(uartID,"receive",function() coroutine.resume(co) end)
             coroutine.yield()
@@ -273,7 +280,10 @@ local function _open()
     if openFlag then return end
     pm.wake("gps.lua")
     uart.setup(uartID,uartBaudrate,uartDatabits,uartParity,uartStopbits)
-    sys.taskInit(taskRead)
+    if not taskFlag then 
+         taskFlag =true
+         sys.taskInit(taskRead)
+    end
     if powerCbFnc then
         powerCbFnc(true)
     else
@@ -681,6 +691,13 @@ end
 -- @usage gps.isFix()
 function isFix()
     return fixFlag
+end
+
+--- 获取GPS模块是否首次定位成功过
+-- @return bool result，true表示曾经定位成功
+-- @usage gps.isOnece()
+function isOnece()
+    return fixOnece
 end
 
 -- 度分格式转换为度格式

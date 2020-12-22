@@ -44,6 +44,7 @@ local function producer(streamType)
                 [audiocore.AMR] = "tip.amr",
                 [audiocore.SPX] = "record.spx",
                 [audiocore.PCM] = "alarm_door.pcm",
+                [audiocore.MP3] = "call.mp3",
             }
             
             local fileHandle = io.open("/lua/"..tAudioFile[streamType],"rb")
@@ -68,6 +69,7 @@ sys.timerStart(function()
     --producer(audiocore.AMR)
     --producer(audiocore.SPX)
     producer(audiocore.PCM)
+    --producer(audiocore.MP3)
     consumer()
 end,3000)
 

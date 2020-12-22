@@ -1,3 +1,18 @@
+发布时间：2020/12/22 10:45
+修改记录：
+    一、lib脚本修改
+	lib脚本版本号：2.3.6
+	(1)audio.lua：支持“多mp3文件拼接播放”功能
+	(2)http.lua：支持HEAD操作
+	(3)sys.lua：修正“某个task中如果有sys.waitUntil，并且这个task循环的创建和销毁，造成内存泄漏”的问题
+	(4)net.lua:修正“core升级为0022之后，2g卡不能上网”的问题
+	(5)aLiYun.lua：mqtt直连方式，增加获取username和password的函数设置功能
+    二、demo脚本修改
+	(1)bluetooth：新增蓝牙demo，需要配合Luat_V3开头的core固件才能使用，此类core固件还没有发布
+	(2)crypto：新增des和des3功能示例
+	(3)ftp：新增ftp demo
+
+
 发布时间：2020/10/30 13:27
 修改记录：
     一、lib脚本修改

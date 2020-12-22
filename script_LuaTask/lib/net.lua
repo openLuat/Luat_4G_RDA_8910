@@ -65,23 +65,47 @@ end
 local function creg(data)
     local p1, s,act
     local prefix = (netMode == NetMode_LTE) and "+CEREG: " or (netMode == NetMode_noNet and "+CREG: " or "+CGREG: ")
-    log.info("net.creg",netMode,prefix)
+    log.info("net.creg1",netMode,prefix)
     if not data:match(prefix) then
-        log.warn("net.creg","no match",data)
-        return
+        --log.info("net.creg2",prefix)
+        if prefix=="+CREG: " then
+            --log.info("net.creg3")
+            prefix = "+CGREG: "
+            if not data:match("+CGREG: ") then
+                log.warn("net.creg1","no match",data)
+                return
+            end
+        elseif prefix=="+CGREG: " then
+            --log.info("net.creg4")
+            prefix = "+CREG: "
+            if not data:match("+CREG: ") then
+                log.warn("net.creg2","no match",data)
+                return
+            end
+        end        
     end
     --获取注册状态
     _, _, p1 = data:find(prefix .. "%d,(%d+)")
+    --log.info("net.creg5",p1 == nil)
     if p1 == nil then
         _, _, p1 = data:find(prefix .. "(%d+)")
+        --log.info("net.creg6",p1 == nil)
         if p1 == nil then return end
         act = data:match(prefix .. "%d+,.-,.-,(%d+)")
     else
         act = data:match(prefix .. "%d,%d+,.-,.-,(%d+)")
     end
+    
+    log.info("net.creg7",p1,act)
 
     --设置注册状态
     s = (p1=="1" or p1=="5") and "REGISTERED" or "UNREGISTER"
+    
+    --log.info("net.creg8",s,state)
+    if prefix=="+CGREG: " and s=="UNREGISTER" then
+        log.info("net.creg9 ignore!!!")
+        return
+    end
     --注册状态发生了改变
     if s ~= state then
         --临近小区查询处理

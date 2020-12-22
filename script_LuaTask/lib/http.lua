@@ -117,6 +117,9 @@ local function taskClient(method,protocal,auth,host,port,path,cert,head,body,tim
             if not rcvChunked then
                 contentLen = tonumber(rspHead["Content-Length"] or "2147483647")
             end
+			if method == "HEAD" then 
+				contentLen = 0
+			end
             --未处理的body数据
             rcvCache = rcvCache:sub(d2+1,-1)
             break
@@ -206,7 +209,7 @@ end
 -- @string method HTTP请求方法
 -- 支持"GET"，"HEAD"，"POST"，"OPTIONS"，"PUT"，"DELETE"，"TRACE"，"CONNECT"
 -- @string url HTTP请求url
--- url格式(除hostname外，其余字段可选；目前的实现不支持hash)
+-- url格式(除hostname外，其余字段可选；目前的实现不支持hash),url中如果包含UTF8编码中文，则需要调用string.rawurlEncode转换成RFC3986编码。
 -- |------------------------------------------------------------------------------|
 -- | protocol |||   auth    |      host       |           path            | hash  |
 -- |----------|||-----------|-----------------|---------------------------|-------|
