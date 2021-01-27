@@ -19,6 +19,7 @@ local gps = require"gpsZkw"
 module(..., package.seeall)
 
 local EPH_TIME_FILE = "/ephTime.txt"
+local EPH_DATA_FILE = "/ephData.bin"
 local sEphData
 local EPH_UPDATE_INTERVAL = 4*3600
 local lastLbsLng,lastLbsLat = "",""
@@ -29,7 +30,7 @@ end
 
 local function writeEphEnd()
     log.info("agpsZkw.writeEphEnd")
-    sys.timerStart(gps.close,3000,gps.TIMER,{tag="lib.agps.lua.eph"})
+    sys.timerStart(gps.close,3000,gps.TIMER,{tag="lib.agpsZkw.lua.eph"})
     sEphData = nil
 end
 
@@ -46,11 +47,13 @@ local function downloadEphCb(result,prompt,head,body)
     log.info("agpsZkw.downloadEphCb",result,prompt)
     runTimer()
     if result and prompt=="200" and body then
+        io.writeFile(EPH_DATA_FILE,body)
+        io.writeFile(EPH_TIME_FILE,tostring(os.time()))
         if gps.isFix() then
-            io.writeFile(EPH_TIME_FILE,tostring(os.time()))
+            
         else
             sEphData = body
-            gps.open(gps.TIMER,{tag="lib.agps.lua.eph",val=10,cb=writeEphEnd})
+            gps.open(gps.TIMER,{tag="lib.agpsZkw.lua.eph",val=10,cb=writeEphEnd})
             sys.timerStart(writeEph,2000)
             return
         end
@@ -63,15 +66,38 @@ function updateEph()
     http.request("GET","http://download.openluat.com/9501-xingli/CASIC_data.dat",nil,nil,nil,20000,downloadEphCb)
 end
 
+
+
+--JWL在星历的时间范围内，如果有星历文件，重启模块就直接把本地的星历文件写入GPS芯片
+--在AGPS_LOCATED 的订阅事件中，调用此接口。
+function upd_xingli()
+    if not gps.isFix() then
+        local lstm = io.readFile(EPH_TIME_FILE)
+        if not lstm or lstm=="" then return end
+        log.info("agpsZkw.upd_xingli lstm=",lstm)
+        if  os.time()-tonumber(lstm) < EPH_UPDATE_INTERVAL then
+            local body = io.readFile(EPH_DATA_FILE)
+            if body and #body >0 then
+                log.info("agpsZkw.upd_xingli length=",#body)
+                sEphData = body
+                gps.open(gps.TIMER,{tag="lib.agpsZkw.lua.eph",val=10,cb=writeEphEnd})
+                sys.timerStart(writeEph,2000)
+            else
+                log.info("agpsZkw.upd_xingli wanto update xingli data")
+                updateEph()
+            end
+        end
+    end
+end
+ 
+
 --检查是否需要更新星历
 local function checkEph()
     local result
     if not gps.isFix() then
-        local file = io.open(EPH_TIME_FILE,"rb")
-        if not file then return true end
-        local lastTm = file:read("*a")
+        lastTm = io.readFile(EPH_TIME_FILE)
         if not lastTm or lastTm=="" then return true end
-        log.info("agpsZkw.checkEph",os.time(),tonumber(lastTm))
+        log.info("agpsZkw.checkEph",os.time(),tonumber(lastTm)," DELTA=",os.time()-tonumber(lastTm))
         result = (os.time()-tonumber(lastTm) >= EPH_UPDATE_INTERVAL) 
     end
     if not result then runTimer() end
@@ -100,7 +126,7 @@ local function getLocCb(result,lat,lng,addr,time)
                 misc.setClock(tm)
                 tm = common.timeZoneConvert(tm.year,tm.month,tm.day,tm.hour,tm.min,tm.sec,8,0)
             end
-            gps.open(gps.TIMERORSUC,{tag="lib.agps.lua.fastFix",val=4})
+            gps.open(gps.TIMERORSUC,{tag="lib.agpsZkw.lua.fastFix",val=4})
             sys.timerStart(setFastFix,2000,lng,lat,tm)
             getloc = 1
         end        
@@ -131,7 +157,7 @@ sys.subscribe("GPS_STATE", function(evt,para)
             lng,lat = lastLbsLng,lastLbsLat
         end
         if lng~="" and lat~="" then
-            gps.open(gps.TIMERORSUC,{tag="lib.agps.lua.fastFix",val=4})
+            gps.open(gps.TIMERORSUC,{tag="lib.agpsZkw.lua.fastFix",val=4})
             local tm = os.date("*t")
             sys.timerStart(gps.setFastFix,2000,lat,lng,common.timeZoneConvert(tm.year,tm.month,tm.day,tm.hour,tm.min,tm.sec,8,0))
         end]]
@@ -147,7 +173,11 @@ sys.subscribe("IP_READY_IND", function()
             lbsLocRequesting = true
             lbsLoc.request(getLocCb,nil,30000,"0","bs.openluat.com","12412",true)
         end]]
-        
-        if checkEph() then updateEph() end
+        log.info("agpsZkw.ipready to updateEph")
+        if checkEph() then
+             updateEph()
+        else
+            sys.timerStart(upd_xingli,3000)
+        end
     end
 end)

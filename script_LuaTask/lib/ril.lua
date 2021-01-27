@@ -141,6 +141,20 @@ function regRsp(head, fnc, typ, formt)
     end
 end
 
+
+
+local app_rilcb=nil
+--[[
+函数名：setrilcb
+功能  ：AT命令的应答处理(含请求结果码和非请求结果码,返回到应用层)
+参数  ：无
+返回值：无
+]]
+function setrilcb(cb)
+    app_rilcb =cb
+end
+
+
 --[[
 函数名：rsp
 功能  ：AT命令的应答处理
@@ -470,6 +484,8 @@ local function atcreader()
             else
                 --非透传模式下处理收到的数据
                 procatc(s)
+
+                if app_rilcb ~=nil then app_rilcb(s)  end
             end
         else
             break

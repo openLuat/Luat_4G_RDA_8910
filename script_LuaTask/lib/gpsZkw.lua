@@ -1,4 +1,11 @@
 --- 模块功能：GPS模块管理
+-- 注意：此功能模块中的功能接口可以分为四大类：
+-- 1、GPS开启
+-- 2、GPS关闭
+-- 3、GPS定位数据读取
+-- 4、GPS参数和功能设置
+-- 1、2、3是通用功能，除了支持合宙的Air530Z和Air82X系列模块，理论上也支持其他厂家的串口GPS模块
+-- 4是专用功能，仅支持合宙的Air530Z和Air82X系列模块
 -- @module gpsZkw
 -- @author openLuat
 -- @license MIT
@@ -127,7 +134,7 @@ local function getstrength(sg)
 end
 
 local function filterTimerFnc()
-    log.info("gps.filterTimerFnc end")
+    log.info("gpsZkw.filterTimerFnc end")
     filteredFlag = true
 end
 
@@ -189,7 +196,7 @@ local function parseNmea(s)
     
     if filterSeconds>0 and fixed and not fixFlag and not filteredFlag then
         if not sys.timerIsActive(filterTimerFnc) then
-            log.info("gps.filterTimerFnc begin")
+            log.info("gpsZkw.filterTimerFnc begin")
             sys.publish("GPS_STATE","LOCATION_FILTER")
             sys.timerStart(filterTimerFnc,filterSeconds*1000)
         end        
@@ -320,7 +327,7 @@ local function _open()
     sys.publish("GPS_STATE","OPEN")
     fixFlag,filteredFlag = false
     Ggalng,Ggalat,Gsv,Sep = "","",""    
-    log.info("gps._open")
+    log.info("gpsZkw._open")
 end
 
 local function _close()
@@ -339,7 +346,7 @@ local function _close()
     sys.timerStop(filterTimerFnc)
     Ggalng,Ggalat,Gsv,Sep = "","",""
     aerialModeSetted,runModeSetted,nmeaReportSetted,nmeaReportFreqSetted = nil
-    log.info("gps._close")
+    log.info("gpsZkw._close")
 end
 
 
@@ -427,7 +434,7 @@ end
 local function timerFnc()
     for i=1,#tList do
         if tList[i].flag then
-            log.info("gps.timerFnc@"..i,tList[i].mode,tList[i].para.tag,tList[i].para.val,tList[i].para.remain,tList[i].para.delay)
+            log.info("gpsZkw.timerFnc@"..i,tList[i].mode,tList[i].para.tag,tList[i].para.val,tList[i].para.remain,tList[i].para.delay)
             local rmn,dly,md,cb = tList[i].para.remain,tList[i].para.delay,tList[i].mode,tList[i].para.cb
 
             if rmn and rmn>0 then
@@ -474,7 +481,7 @@ local function statInd(evt)
     --定位成功的消息
     if evt == "LOCATION_SUCCESS" then
         for i=1,#tList do
-            log.info("gps.statInd@"..i,tList[i].flag,tList[i].mode,tList[i].para.tag,tList[i].para.val,tList[i].para.remain,tList[i].para.delay,tList[i].para.cb)
+            log.info("gpsZkw.statInd@"..i,tList[i].flag,tList[i].mode,tList[i].para.tag,tList[i].para.val,tList[i].para.remain,tList[i].para.delay,tList[i].para.cb)
             if tList[i].flag then
                 if tList[i].mode ~= TIMER then
                     tList[i].para.delay = 1
@@ -513,7 +520,7 @@ end
 -- @see DEFAULT,TIMERORSUC,TIMER
 function open(mode,para)
     assert((para and type(para) == "table" and para.tag and type(para.tag) == "string"),"gps.open para invalid")
-    log.info("gps.open",mode,para.tag,para.val,para.cb)
+    log.info("gpsZkw.open",mode,para.tag,para.val,para.cb)
     --如果GPS定位成功
     if isFix() then
         if mode~=TIMER then
@@ -546,7 +553,7 @@ end
 -- @see open,DEFAULT,TIMERORSUC,TIMER
 function close(mode,para)
     assert((para and type(para)=="table" and para.tag and type(para.tag)=="string"),"gps.close para invalid")
-    log.info("gps.close",mode,para.tag,para.val,para.cb)
+    log.info("gpsZkw.close",mode,para.tag,para.val,para.cb)
     --删除此“GPS应用”
     delItem(mode,para)
     local valid,i

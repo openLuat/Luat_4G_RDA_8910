@@ -30,7 +30,7 @@ end
 -- @usage w25q32 = spiFlash.setup(spi.SPI_1, pio.P0_10)
 function setup(id, timeout)
 
-    if not spi.setup(id, 0, 0, 8, 13000000, 1, 1) then
+    if not spi.setup(id, 0, 0, 8, 13000000, 1) then
         log.error('BH25Q32.setup', 'spi setup failed')
     end
 

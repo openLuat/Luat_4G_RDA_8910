@@ -10,7 +10,7 @@ require "patch"
 module(..., package.seeall)
 
 -- lib脚本版本号，只要lib中的任何一个脚本做了修改，都需要更新此版本号
-SCRIPT_LIB_VER = "2.3.6"
+SCRIPT_LIB_VER = "2.3.7"
 
 -- TaskID最大值
 local TASK_TIMER_ID_MAX = 0x1FFFFFFF
@@ -102,10 +102,10 @@ function waitUntilExt(id, ms)
     return false
 end
 
---- 创建一个任务线程,在模块最末行调用该函数并注册模块中的任务函数，main.lua导入该模块即可
--- @param fun 任务函数名，用于resume唤醒时调用
--- @param ... 任务函数fun的可变参数
--- @return co  返回该任务的线程号
+--- 创建一个任务并且运行该任务
+-- @param fun 任务主函数，激活task时使用
+-- @param ... 任务主函数fun的可变参数
+-- @return co  返回该任务的线程ID
 -- @usage sys.taskInit(task1,'a','b')
 function taskInit(fun, ...)
     local co = coroutine.create(fun)
@@ -298,7 +298,18 @@ function unsubscribe(id, callback)
         log.warn("warning: sys.unsubscribe invalid parameter", id, callback)
         return
     end
-    if subscribers[id] then subscribers[id][callback] = nil end
+    if subscribers[id] then
+        subscribers[id][callback] = nil
+        
+        local empty = true
+        for k,v in pairs(subscribers[id]) do
+            if v then
+                empty=false
+                break
+            end
+        end
+        if empty then subscribers[id]=nil end
+    end
 end
 
 --- 发布内部消息，存储在内部消息队列中
@@ -327,9 +338,12 @@ local function dispatch()
                     end
                 end
             end
-            for callback, flag in pairs(subscribers[message[1]]) do
-                if not flag then
-                    subscribers[message[1]][callback] = nil
+            
+            if subscribers[message[1]] then
+                for callback, flag in pairs(subscribers[message[1]]) do
+                    if not flag then
+                        subscribers[message[1]][callback] = nil
+                    end
                 end
             end
         end

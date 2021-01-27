@@ -1,3 +1,25 @@
+发布时间：2021/01/27 09:50
+修改记录：
+    一、lib脚本修改
+	lib脚本版本号：2.3.7
+	(1)mqtt.lua：修正“subscribe订阅，服务器返回订阅失败时，代码逻辑无法检测到失败”的问题
+	(2)aLiYun.lua：支持最新的阿里云公共实例和企业版示例的MQTT直连方式
+	(3)audio.lua：新增“设置mic增益”的功能接口audio.setMicGain
+	(4)audio.lua：支持“audio.setChannel接口设置输入mic通道”的功能
+	(5)patch.lua：修正“2.3.6版本中spi.send_recv接口，接收不到数据”的问题
+    二、demo脚本修改
+	(1)i2c：新增mpu6xxx、aht10驱动文件
+	(2)rtmp：新增rtmp demo
+	(3)aLiYun：公共实例和企业版示例的MQTT直连方式demo
+	(4)call：新增mic增益设置功能演示
+	(5)call：新增mic增益设置和mic通道选择功能演示
+	(6)txiot：新增腾讯云demo
+	(7)modbus：新增modbus demo
+	(8)bluetooth：新增beacon功能演示
+
+
+
+
 发布时间：2020/12/22 10:45
 修改记录：
     一、lib脚本修改

@@ -1,5 +1,5 @@
 --- 模块功能：ADC功能测试.
--- ADC测量精度(10bit，电压测量范围为0到1.85V，分辨率为1850/1024=1.8MV，测量精度误差为20MV)
+-- ADC测量精度(12bit)
 -- 每隔1s读取一次ADC值
 -- @author openLuat
 -- @module adc.testAdc
@@ -48,4 +48,10 @@ sys.timerLoopStart(read3,1000)
 require"misc"
 sys.timerLoopStart(function ()
     log.info("vbatt.read",misc.getVbatt())
+    
+    intermediate = '+CPBR: 3,"19121459630",129,"gNh"'
+
+    local num,name = string.match(intermediate,"%+CPBR:%s*%d+,\"([#%*%+%d]*)\",%d+,\"(%w*)\"")
+
+    print(num,name)
 end,1000)

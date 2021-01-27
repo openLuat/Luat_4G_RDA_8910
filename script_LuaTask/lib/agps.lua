@@ -20,9 +20,11 @@ require"gps"
 module(..., package.seeall)
 
 local EPH_TIME_FILE = "/ephTime.txt"
+local EPH_DATA_FILE = "/ephData.bin"
 local writeEphIdx,sEphData,writeEphSta = 0
 local EPH_UPDATE_INTERVAL = 4*3600
 local lastLbsLng,lastLbsLat = "",""
+local fneed_xingli=false
 
 local function runTimer()
     sys.timerStart(updateEph,EPH_UPDATE_INTERVAL*1000)
@@ -82,9 +84,11 @@ local function downloadEphCb(result,prompt,head,body)
     log.info("agps.downloadEphCb",result,prompt)
     runTimer()
     if result and prompt=="200" and body then
+        io.writeFile(EPH_DATA_FILE,body)
         if gps.isFix() then
             io.writeFile(EPH_TIME_FILE,tostring(os.time()))
         else
+            fneed_xingli=false
             sEphData = body:toHex()
             gps.open(gps.TIMER,{tag="lib.agps.lua.eph",val=10,cb=writeEphEnd})
             sys.timerStart(writeEphBegin,2000)
@@ -99,15 +103,46 @@ function updateEph()
     http.request("GET","download.openluat.com/9501-xingli/brdcGPD.dat_rda",nil,nil,nil,20000,downloadEphCb)
 end
 
+
+
+--JWL在星历的时间范围内，如果有星历文件，重启模块就直接把本地的星历文件写入GPS芯片
+--在AGPS_LOCATED 的订阅事件中，调用此接口。
+function upd_xingli()
+    if not gps.isFix() then
+        local lstm = io.readFile(EPH_TIME_FILE)
+        if not lstm or lstm=="" then return end
+        log.info("agps.upd_xingli lstm=",lstm)
+        if  os.time()-tonumber(lstm) < EPH_UPDATE_INTERVAL then
+            local body = io.readFile(EPH_DATA_FILE)
+            if body and #body >0 then
+                log.info("agps.upd_xingli length=",#body)
+                fneed_xingli=false
+                sEphData = body:toHex()
+                gps.open(gps.TIMER,{tag="lib.agps.lua.eph",val=10,cb=writeEphEnd})
+                sys.timerStart(writeEphBegin,2000)
+            else
+                log.info("agps.upd_xingli wanto update xingli data")
+                updateEph()
+            end
+        end
+    end
+end
+sys.subscribe("AGPS_LOCATED", function()
+    sys.timerStart(function() 
+        log.info("agps.want to upd_xingli",fneed_xingli)
+        if fneed_xingli then
+           upd_xingli()
+        end
+    end,5000)
+end)
+
 --检查是否需要更新星历
 local function checkEph()
     local result
     if not gps.isFix() then
-        local file = io.open(EPH_TIME_FILE,"rb")
-        if not file then return true end
-        local lastTm = file:read("*a")
+        lastTm = io.readFile(EPH_TIME_FILE)
         if not lastTm or lastTm=="" then return true end
-        log.info("agps.checkEph",os.time(),tonumber(lastTm))
+        log.info("agps.checkEph",os.time(),tonumber(lastTm)," DELTA=",os.time()-tonumber(lastTm))
         result = (os.time()-tonumber(lastTm) >= EPH_UPDATE_INTERVAL) 
     end
     if not result then runTimer() end
@@ -123,10 +158,12 @@ local getloc = 0
 local lbsLocRequesting
 --获取到基站对应的经纬度，写到GPS芯片中
 local function getLocCb(result,lat,lng,addr,time)
+    fneed_xingli=true
     log.info("agps.getLocCb",result,lat,lng,time and time:len() or 0)
     lbsLocRequesting = false
     if result==0 then
         lastLbsLng,lastLbsLat = lng,lat
+        sys.publish("AGPS_LOCATED", lng,lat)
         if not gps.isFix() then
             local tm = {year=0,month=0,day=0,hour=0,min=0,sec=0}
             if time:len()==6 then            

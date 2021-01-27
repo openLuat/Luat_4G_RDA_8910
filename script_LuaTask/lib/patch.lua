@@ -141,7 +141,7 @@ if spi and spi.send_recv then
     oldSpiSendRecv = spi.send_recv
     spi.send_recv = function(...)
         pm.wake("lib.patch.spi.send_recv")
-        local result = oldSpiSend(...)
+        local result = oldSpiSendRecv(...)
         pm.sleep("lib.patch.spi.send_recv")
         return result
     end

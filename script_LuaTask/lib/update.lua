@@ -80,6 +80,7 @@ function clientTask()
                 local needBreak                
                 if statusCode=="200" or statusCode=="206" then
                     needBreak = true
+                    log.info("update.rtos.fota_end",rtos.fota_end())
                     if sCbFnc then
                         sCbFnc(true)
                     else
@@ -92,12 +93,12 @@ function clientTask()
                     log.info("update.clientTask","wait server create fota")
                     sys.wait(30000)
                 else
+                    log.info("update.rtos.fota_end",rtos.fota_end())
                     if sCbFnc then sCbFnc(false) end
                     needBreak = true
                 end
                 
-                if needBreak then
-                    log.info("update.rtos.fota_end",rtos.fota_end())
+                if needBreak then                    
                     break
                 end
             else

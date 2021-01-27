@@ -25,7 +25,7 @@ NetMode_LTE=     4--4G
 NetMode_WCDMA=   5--3G
 local netMode = NetMode_noNet
 
---GSM网络状态：
+--网络状态：
 --INIT：开机初始化中的状态
 --REGISTERED：注册上GSM网络
 --UNREGISTER：未注册上GSM网络
@@ -455,6 +455,9 @@ local function neturc(data, prefix)
 end
 
 --- 设置飞行模式
+-- 注意：如果要测试飞行模式的功耗，开机后不要立即调用此接口进入飞行模式
+-- 在模块注册上网络之前，调用此接口进入飞行模式不仅无效，还会导致功耗数据异常
+-- 详情参考：http://doc.openluat.com/article/488/0
 -- @bool mode，true:飞行模式开，false:飞行模式关
 -- @return nil
 -- @usage net.switchFly(mode)
@@ -488,7 +491,7 @@ function getNetMode()
 	return netMode
 end
 
---- 获取GSM网络注册状态
+--- 获取网络注册状态
 -- @return string state,GSM网络注册状态，
 -- "INIT"表示正在初始化
 -- "REGISTERED"表示已注册
@@ -527,13 +530,15 @@ function getCi()
 end
 
 --- 获取信号强度
+-- 当前注册的是2G网络，就是2G网络的信号强度
+-- 当前注册的是4G网络，就是4G网络的信号强度
 -- @return number rssi,当前信号强度(取值范围0-31)
 -- @usage net.getRssi()
 function getRssi()
 	return rssi
 end
 
---- 信号接收功率
+--- 4G网络信号接收功率
 -- @return number rsrp,当前信号接收功率(取值范围-140 - -40)
 -- @usage net.getRsrp()
 function getRsrp()

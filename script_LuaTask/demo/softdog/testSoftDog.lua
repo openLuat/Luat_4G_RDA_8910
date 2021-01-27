@@ -7,15 +7,6 @@
 
 module(...,package.seeall)
 
-sys.taskInit(function()
-    sys.wait(10000)
-    log.info("softDog loop test start!")
-    sys.wait(1000)
-    while true do
-    end
-end
-
---[[
 --[[
 函数名：eatSoftDog
 功能  ：喂狗
@@ -50,7 +41,7 @@ sys.timerStart(closeSoftDog,180*1000)
 
 --打印版本号
 sys.timerLoopStart(log.info,2000,rtos.get_version(),_G.VERSION)
-]]
+
 
 
 

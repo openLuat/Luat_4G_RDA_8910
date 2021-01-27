@@ -347,7 +347,7 @@ function setCallVolume(vol)
 end
 
 
---- 设置麦克音量等级
+-- 设置麦克音量等级
 -- @number vol，音量值为0-15，0为静音
 -- @return bool result，设置成功返回true,失败返回false
 -- @usage audio.setMicVolume(14)
@@ -361,6 +361,38 @@ ril.regRsp("+CMIC",function(cmd,success)
         sMicVolume = tonumber(cmd:match("CMIC=%d+,(%d+)"))
     end
 end)
+
+--- 设置mic增益等级
+-- 通话时mic增益在通话建立成功之后设置才有效
+-- 录音mic增益设置后实时生效
+-- @string mode，增益类型
+--      "call"表示通话中mic增益
+--      "record"表示录音mic增益
+-- @number level，增益等级，取值为0-7
+-- @return bool result，设置成功返回true，失败返回false
+-- @usage audio.setMicGain("record",7)，设置录音时mic增益为7级
+function setMicGain(mode, level)
+    if (mode ~= "call" and mode ~= "record") or (level > 7 and level < 0) then
+        return false
+    else
+        local gainHex
+        if level == 7 then
+            gainHex = string.format("%02X%02X%02X%02X", 7, 0, 15, 0)
+        else
+            gainHex = string.format("%02X%02X%02X%02X", level, 0, level * 2, 0)
+        end
+        
+
+        if mode == "call" then
+            ril.request("AT+CACCP=5,1,0," .. gainHex)
+            ril.request("AT+CACCP=0,1,0," .. gainHex)
+        elseif mode == "record" then
+            ril.request("AT+CACCP=2,1,6," .. gainHex)
+        end
+
+        return true
+    end
+end
 
 --- 获取喇叭音量等级
 -- @return number vol，喇叭音量等级
@@ -376,7 +408,7 @@ function getCallVolume()
     return sCallVolume
 end
 
---- 获取麦克音量等级
+-- 获取麦克音量等级
 -- @return number vol，麦克音量等级
 -- @usage audio.getMicVolume()
 function getMicVolume(vol)
@@ -403,19 +435,21 @@ function setTTSSpeed(speed)
     end
 end
 
---- 设置音频输出通道
+--- 设置音频输入、输出通道
 -- 设置后实时生效
--- @number[opt=2] channel，0：earphone听筒  1：headphone耳机    2：speaker喇叭
+-- @number[opt=2] output，0：earphone听筒    1：headphone耳机    2：speaker喇叭
+-- @number[opt=0] input， 0：主mic    3：耳机mic
 -- @return nil
 -- @usage
 -- 设置为听筒输出：audio.setChannel(0)
 -- 设置为耳机输出：audio.setChannel(1)
 -- 设置为喇叭输出：audio.setChannel(2)
-function setChannel(channel)
-    if tonumber(string.match(rtos.get_version(),"(%d+)_RDA"))>=9 then
-        audiocore.setchannel(channel)
+-- 设置为喇叭输出、耳机mic输入：audio.setChannel(2,3)
+function setChannel(output, input)
+    if tonumber(string.match(rtos.get_version(), "(%d+)_RDA")) >= 9 then
+        audiocore.setchannel(output or 2, input or 0)
     else
-        ril.request("AT+AUDCH="..(channel==1 and 1 or 2))
+        ril.request("AT+AUDCH="..(output==1 and 1 or 2))
     end    
 end
 

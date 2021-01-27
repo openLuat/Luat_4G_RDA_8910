@@ -1,4 +1,11 @@
 --- 模块功能：GPS模块管理
+-- 注意：此功能模块中的功能接口可以分为四大类：
+-- 1、GPS开启
+-- 2、GPS关闭
+-- 3、GPS定位数据读取
+-- 4、GPS参数和功能设置
+-- 1、2、3是通用功能，除了支持合宙的Air530模块，理论上也支持其他厂家的串口GPS模块
+-- 4是专用功能，仅支持合宙的Air530模块
 -- @module gps
 -- @author openLuat
 -- @license MIT
@@ -266,7 +273,7 @@ function writeCmd(cmd,isFull)
     end
     uart.write(uartID,tmp)
     log.info("gps.writecmd",tmp)
-    --log.info("gps.writecmd",tmp:toHex())
+    log.info("gps.writecmd:toHex",tmp:toHex())
 end
 
 function writePendingCmds()

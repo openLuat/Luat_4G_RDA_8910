@@ -16,7 +16,10 @@ local RCD_READ_UNIT = 1024
 --rcdsize：录音文件总长度
 --rcdcnt：当前需要读取多少次录音文件，才能全部读取
 local rcdoffset,rcdsize,rcdcnt
-
+--设置为spk播放，耳机mic输入
+--audio.setChannel(2, 3)
+--设置录音时mic增益为7级
+--audio.setMicGain("record",7)
 --[[
 函数名：playcb
 功能  ：播放录音结束后的回调函数

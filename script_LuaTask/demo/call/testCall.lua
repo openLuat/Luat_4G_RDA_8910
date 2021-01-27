@@ -25,6 +25,8 @@ end
 local function connected(num)
     log.info("testCall.connected")
     coIncoming = nil
+    --通话中设置mic增益，必须在通话建立以后设置
+    --audio.setMicGain("call",7)
     --通话中音量测试
     sys.timerLoopStart(callVolTest,5000)
     --通话中向对方播放TTS测试

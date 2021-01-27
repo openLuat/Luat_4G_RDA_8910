@@ -45,6 +45,7 @@ local function poweron()
 end
 local function scan()
     log.info("bt", "scan")
+    --btcore.setscanparam(1,48,6,0,0)--扫描参数设置（扫描类型,扫描间隔,扫描窗口,扫描过滤测量,本地地址类型）
     btcore.scan(1) --开启扫描
     _, result = sys.waitUntil("BT_SCAN_CNF", 50000) --等待扫描打开成功
     if result ~= 0 then

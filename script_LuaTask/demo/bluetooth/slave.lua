@@ -43,20 +43,20 @@ end
 local function service(uuid,struct)
     btcore.addservice(uuid) --添加服务
     for i = 1, #struct do
-		btcore.addcharacteristic(struct[i][1],struct[i][2]) --添加特征
-		if(type(struct[i][3]) == "table") then
-			for j = 1,#struct[i][3] do
-				btcore.adddescriptor(struct[i][3][j])  --添加描述
+		btcore.addcharacteristic(struct[i][1],struct[i][2],struct[i][3]) --添加特征
+		if(type(struct[i][4]) == "table") then
+			for j = 1,#struct[i][4] do
+                btcore.adddescriptor(struct[i][4][j][1],struct[i][4][j][2])  --添加描述
 			end
 		end
 	end
 end
 ]]--
 local function advertising()
-    --local struct1 = {{0xfee1, 0x08},
-    --    {0xfee2, 0x10, {0x2902}}}--{特征uuid,特征属性,描述}
-    --local struct2 = {{"9ecadc240ee5a9e093f3a3b50300406e",0x10,{"2902"}},
-    --              {"9ecadc240ee5a9e093f3a3b50200406e",0x0c}}
+    --local struct1 = {{0xfee1, 0x08, 0x0002},
+    --    {0xfee2, 0x10,0x0001, {{0x2902,0x0001},{0x2901,"123456"}}}}--{特征uuid,特征属性,特征权限,{特征描述uuid,描述属性}}
+    --local struct2 = {{"9ecadc240ee5a9e093f3a3b50300406e",0x10,0x0001,{{0x2902,0x0001}}},
+    --              {"9ecadc240ee5a9e093f3a3b50200406e",0x0c, 0x0002}}
 
     log.info("bt", "advertising")
     btcore.setname("Luat_Air724UG")-- 设置广播名称
@@ -64,6 +64,7 @@ local function advertising()
     --btcore.setscanrspdata(string.fromHex("04ff000203"))-- 设置广播数据 根据蓝牙广播包协议
     --service(0xfee0, struct1)--添加服务16bit uuid   自定义服务
     --service("9ecadc240ee5a9e093f3a3b50100406e",struct2)--添加服务128bit uuid   自定义服务
+	--btcore.setadvparam(0x80,0xa0,0,0,0x07,0,0,"11:22:33:44:55:66") --广播参数设置 (最小广播间隔,最大广播间隔,广播类型,广播本地地址类型,广播channel map,广播过滤策略,定向地址类型,定向地址)
     btcore.advertising(1)-- 打开广播
 end
 

@@ -117,6 +117,15 @@ local function unpack(s)
     
     if packet.id == CONNACK then
         nextpos, packet.ackFlag, packet.rc = pack.unpack(s, "bb", pos)
+    elseif packet.id == SUBACK then
+        nextpos, packet.ackFlag, packet.rc = pack.unpack(s, "bb", pos)
+        if len >= 2 then
+            nextpos, packet.packetId = pack.unpack(s, ">H", pos)
+            packet.grantedQos = string.sub(s, nextpos, pos + len - 1)
+        else
+            packet.packetId = 0
+            packet.grantedQos = ""
+        end
     elseif packet.id == PUBLISH then
         nextpos, packet.topic = pack.unpack(s, ">P", pos)
         if packet.qos > 0 then
@@ -334,7 +343,7 @@ function mqttc:connect(host, port, transport, cert, timeout)
     local r, packet = self:waitfor(CONNACK, self.commandTimeout, nil, true)
     if not r or packet.rc ~= 0 then
         log.info("mqtt.client:connect", "connack error", r and packet.rc or -1)
-        return false
+        return false,packet.rc
     end
     
     self.connected = true
@@ -367,8 +376,14 @@ function mqttc:subscribe(topic, qos)
         return false
     end
     
-    if not self:waitfor(SUBACK, self.commandTimeout, nil, true) then
+    local r, packet = self:waitfor(SUBACK, self.commandTimeout, nil, true)
+    if not r then
         log.info("mqtt.client:subscribe", "wait ack failed")
+        return false
+    end
+    
+    if not (packet.grantedQos and packet.grantedQos~="" and not packet.grantedQos:match(string.char(0x80))) then
+        log.info("mqtt.client:subscribe", "suback grant qos error", packet.grantedQos)
         return false
     end
     

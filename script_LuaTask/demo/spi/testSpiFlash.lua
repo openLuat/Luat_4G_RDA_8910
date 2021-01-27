@@ -13,7 +13,7 @@ require"pm"
 pm.wake("wake11")
 require"pins"
 
-local result = spi.setup(spi.SPI_1,0,0,8,800000,1,0)--初始化spi，
+local result = spi.setup(spi.SPI_1,0,0,8,800000,1)--初始化spi，
 log.info("spi1",spi.SPI_1)
 log.info("testSpiFlash.init",result)
 local s = string.fromHex("9f000000000000")

@@ -400,7 +400,7 @@ function mt:close()
     end
 end
 
---- socket接收自定义控制处理
+-- socket接收自定义控制处理
 -- @function[opt=nil] rcvCbFnc，socket接收到数据后，执行的回调函数，回调函数的调用形式为：
 -- rcvCbFnc(readFnc,socketIndex,rcvDataLen)
 -- rcvCbFnc内部，会判断是否读取数据，如果读取，执行readFnc(socketIndex,rcvDataLen)，返回true；否则返回false或者nil
