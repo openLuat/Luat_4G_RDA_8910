@@ -450,7 +450,11 @@ local function sendat()
 
     log.info("ril.sendat", currcmd)
     --向虚拟串口中发送AT命令
-    vwrite(uart.ATC, currcmd .. "\r")
+    if currcmd:match("^AT%+POC=") then
+        vwrite(uart.ATC, currcmd .. "\r\n")
+    else
+        vwrite(uart.ATC, currcmd .. "\r")
+    end
 end
 
 -- 延时执行某条AT命令的定时器回调

@@ -146,3 +146,12 @@ if spi and spi.send_recv then
         return result
     end
 end
+
+if disp and disp.sleep then
+    oldDispSleep = disp.sleep
+    disp.sleep = function(...)
+        pm.wake("lib.patch.disp.sleep")
+        oldDispSleep(...)
+        pm.sleep("lib.patch.disp.sleep")
+    end
+end

@@ -320,7 +320,7 @@ local function _open()
     if powerCbFnc then
         powerCbFnc(true)
     else
-        pmd.ldoset(15,pmd.LDO_VIBR)
+        pmd.ldoset(10,pmd.LDO_VIBR)
         rtos.sys32k_clk_out(1)
     end
     openFlag = true

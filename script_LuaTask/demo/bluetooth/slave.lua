@@ -12,8 +12,6 @@ local btWifiTdmTest = false
 
 require "wifiScan"
 
-local bt_test = {}
-
 local function init()
     log.info("bt", "init")
     rtos.on(rtos.MSG_BLUETOOTH, function(msg)
@@ -106,7 +104,7 @@ local function data_trans()
     end
 end
 
-ble_test = {init, poweron,data_trans}
+local ble_test = {init, poweron,data_trans}
 
 if btWifiTdmTest then
     --蓝牙wifi分时复用测试方法：

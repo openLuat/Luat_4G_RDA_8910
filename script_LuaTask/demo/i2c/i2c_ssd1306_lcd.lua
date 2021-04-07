@@ -52,18 +52,69 @@ end
 ]]
 local function i2cShow()
 
-    if i2c.setup(2,i2c.SLOW,0x48) ~= i2c.SLOW then
+    if i2c.setup(i2cid,i2c.SLOW,i2cslaveaddr) ~= i2c.SLOW then
         print("testI2c.init fail")
         return
-    else
-        print("testI2c.init ok")
-        i2c.send(2, 0x48, 0x11)
     end
 
-        --i2c.close(2)
+    local cmd = {0xAE, 0X00, 0x10, 0x40, 0x81, 0x7f, 0xA1, 0XA6, 0XA8, 63, 0XC8, 0XD3, 0X00, 0XD5, 0X80, 0XDA, 0X12, 0X8D, 0X14, 0X20, 0X01, 0XAF}
+    local i
+
+    lcd_write_cmd(0xAF)
+    lcd_write_cmd(0xAF)
+    lcd_write_cmd(0xAF)
+    lcd_write_cmd(0xAF)
+    log.info("zwb_Lua lcd_write_cmd cmd ", 0xAF)
+    for i=1,#cmd do
+        log.info("zwb_Lua lcd_write_cmd cmd1 ", lcd_write_cmd(cmd[i]))
+    end
+
+    local cmd2 =  {0X21, 0X00, 0X7F}
+
+    for i=1,3 do
+        log.info("zwb_Lua lcd_write_cmd cmd2 ", lcd_write_cmd(cmd2[i]))
+    end
+
+    for i=1,128*4 do
+        lcd_write_data(0)
+        lcd_write_data(0)
+    end
+
+    lcd_write_cmd(0x22)
+    lcd_write_cmd(2)
+    lcd_write_cmd(3)
+
+    lcd_write_cmd(0x21)
+    lcd_write_cmd(43)
+    lcd_write_cmd(63)
+
+    local cmd_G = {0x0, 0x0,0xf0, 0x7,0xf8, 0xf,0x8, 0x8,0x98, 0xf,0x90, 0x7,0x0, 0x0}
+    local cmd_O = {0x0, 0x0,0xf0, 0x7,0xf8, 0xf,0x8, 0x8,0xf8, 0xf,0xf0, 0x7,0x0, 0x0}
+    local cmd_  = {0x0, 0x0,0x0, 0x0,0xf8, 0xd,0xf8, 0xd,0x0, 0x0,0x0, 0x0,0x0, 0x0}
+
+    for i=1,#cmd_G do
+        lcd_write_data(cmd_G[i])
+    end
+    for i=1,#cmd_O do
+        lcd_write_data(cmd_O[i])
+    end
+    for i=1,#cmd_ do
+        lcd_write_data(cmd_[i])
+    end
+
+    --从从设备的寄存器地址0x20中读1字节的数据，并且打印出来
+    log.info("zwb_Lua 0x20 read",string.toHex(i2c.read(i2cid,0x20,1)))
+
+    --该代码与下面的代码等价
+    --向从设备i2cslaveaddr发送寄存器地址0x20
+    i2c.send(i2cid,i2cslaveaddr,0x20)
+    --读取从设备i2cslaveaddr寄存器内的1个字节的数据，并且打印出来
+    log.info("zwb_Lua 0x20 recv",string.toHex(i2c.recv(i2cid,i2cslaveaddr,1)))
+
+    i2c.close(i2cid)
 end
 
 --显示内容
 sys.timerLoopStart(function ()
     i2cShow()
-end, 10000)
+end, 3000)

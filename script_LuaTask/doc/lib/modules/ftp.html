@@ -33,6 +33,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
@@ -99,10 +100,97 @@
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#request">
-    request (ftp_mode, host, username, password, transmission_mode, remote_file, local_file, timeout)
+	<td class="name" nowrap><a href="#close">
+    close ()
     </a></td>
-	<td class="summary">FTP客户端</td>
+	<td class="summary">FTP客户端关闭</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#command">
+    command (command, timeout)
+    </a></td>
+	<td class="summary">FTP客户端命令</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#login">
+    login (ftp_mode, host, port, username, password, timeout, ssl, cert)
+    </a></td>
+	<td class="summary">FTP客户端登录</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#upload">
+    upload (remote_file, local_file, timeout)
+    </a></td>
+	<td class="summary">FTP客户端文件上传</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#download">
+    download (remote_file, local_file, timeout)
+    </a></td>
+	<td class="summary">FTP客户端文件下载</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#checktype">
+    checktype (mode, timeout)
+    </a></td>
+	<td class="summary">设置FTP传输类型 A:ascii I:Binary</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#pwd">
+    pwd (timeout)
+    </a></td>
+	<td class="summary">显示当前工作目录</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#cwd">
+    cwd (path, timeout)
+    </a></td>
+	<td class="summary">更改工作目录</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#cdup">
+    cdup (timeout)
+    </a></td>
+	<td class="summary">回到上级目录</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mkd">
+    mkd (path, timeout)
+    </a></td>
+	<td class="summary">创建目录</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#list">
+    list (file_irectory, timeout)
+    </a></td>
+	<td class="summary">列出目录列表或文件信息</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#deletefolder">
+    deletefolder (file_irectory, timeout)
+    </a></td>
+	<td class="summary">删除目录</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#deletefile">
+    deletefile (file_irectory, timeout)
+    </a></td>
+	<td class="summary">删除文件</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#ftp_data_client">
+    ftp_data_client
+    </a></td>
+	<td class="summary">创建ftp数据连接</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ftp_client">
+    ftp_client
+    </a></td>
+	<td class="summary">创建ftp命令连接</td>
 	</tr>
 </table>
 
@@ -114,13 +202,61 @@
 
     <dl class="function">
     <dt>
-    <a name = "request"></a>
+    <a name = "close"></a>
     <strong  style="color: red;">
-    request (ftp_mode, host, username, password, transmission_mode, remote_file, local_file, timeout)
+    close ()
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">FTP客户端</pre>
+    <pre class="example"  style="color: red;">FTP客户端关闭</pre>
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "command"></a>
+    <strong  style="color: red;">
+    command (command, timeout)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">FTP客户端命令</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">command</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example">string类型,命令 例如"PWD" "HELP LIST" "SYST"</pre>
+        </li>
+        <li><span class="parameter">timeout</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">number类型,可选参数，接收超时时间，单位毫秒,默认为0</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">string,string,返回 response_code, response_message</pre></il>
+    </ul>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "login"></a>
+    <strong  style="color: red;">
+    login (ftp_mode, host, port, username, password, timeout, ssl, cert)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">FTP客户端登录</pre>
 
 
     <h3>Parameters:</h3>
@@ -133,6 +269,10 @@
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
         <pre class="example">string类型,ip地址</pre>
         </li>
+        <li><span class="parameter">port</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example">number类型,端口,默认21</pre>
+        </li>
         <li><span class="parameter">username</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
         <pre class="example">string类型,用户名</pre>
@@ -141,10 +281,48 @@
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
         <pre class="example">string类型,密码</pre>
         </li>
-        <li><span class="parameter">transmission_mode</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-        <pre class="example">string类型,传输模式"RETR" or "STOR"  RETR:下载模式,STOR:上传模式</pre>
+        <li><span class="parameter">timeout</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">number类型,可选参数，接收超时时间，单位毫秒,默认为0</pre>
         </li>
+        <li><span class="parameter">ssl</span>
+            <span class="types"><span class="type">bool</span></span>
+        <pre class="example">可选参数，默认为nil，ssl，是否为ssl连接，true表示是，其余表示否</pre>
+        </li>
+        <li><span class="parameter">cert</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+        <pre class="example">可选参数，默认为nil，cert，ssl连接需要的证书配置，只有ssl参数为true时，才参数才有意义，cert格式如下：
+     {
+     caCert = "ca.crt", --CA证书文件(Base64编码 X.509格式)，如果存在此参数，则表示客户端会对服务器的证书进行校验；不存在则不校验
+     clientCert = "client.crt", --客户端证书文件(Base64编码 X.509格式)，服务器对客户端的证书进行校验时会用到此参数
+     clientKey = "client.key", --客户端私钥文件(Base64编码 X.509格式)
+     clientPassword = "123456", --客户端证书文件密码[可选]
+     }</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">string,string,返回 response_code, response_message</pre></il>
+    </ul>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "upload"></a>
+    <strong  style="color: red;">
+    upload (remote_file, local_file, timeout)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">FTP客户端文件上传</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
         <li><span class="parameter">remote_file</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
         <pre class="example">string类型,远程文件名</pre>
@@ -155,15 +333,335 @@
         </li>
         <li><span class="parameter">timeout</span>
             <span class="types"><span class="type">number</span></span>
-        <pre class="example">number类型,超时时间</pre>
+        <pre class="example">number类型,可选参数，接收超时时间，单位毫秒,默认为0</pre>
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ul>
         <li>
-        <pre class="example">number,string,正常返回response_code, response_header, response_body</pre></il>
+        <pre class="example">string,string,返回 response_code, response_message</pre></il>
     </ul>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "download"></a>
+    <strong  style="color: red;">
+    download (remote_file, local_file, timeout)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">FTP客户端文件下载</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">remote_file</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example">string类型,远程文件名</pre>
+        </li>
+        <li><span class="parameter">local_file</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example">string类型,本地文件名</pre>
+        </li>
+        <li><span class="parameter">timeout</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">number类型,可选参数，接收超时时间，单位毫秒,默认为0</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">string,string,返回 response_code, response_message</pre></il>
+    </ul>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "checktype"></a>
+    <strong  style="color: red;">
+    checktype (mode, timeout)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">设置FTP传输类型 A:ascii I:Binary</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">mode</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example">A:ascii I:Binary</pre>
+        </li>
+        <li><span class="parameter">timeout</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">number类型,可选参数，接收超时时间，单位毫秒,默认为0</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">string,string,返回 response_code, response_message</pre></il>
+    </ul>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "pwd"></a>
+    <strong  style="color: red;">
+    pwd (timeout)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">显示当前工作目录</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">timeout</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">number类型,可选参数，接收超时时间，单位毫秒,默认为0</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">string,string,返回 response_code, response_message</pre></il>
+    </ul>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "cwd"></a>
+    <strong  style="color: red;">
+    cwd (path, timeout)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">更改工作目录</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">path</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example">工作目录</pre>
+        </li>
+        <li><span class="parameter">timeout</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">number类型,可选参数，接收超时时间，单位毫秒,默认为0</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">string,string,返回 response_code, response_message</pre></il>
+    </ul>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "cdup"></a>
+    <strong  style="color: red;">
+    cdup (timeout)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">回到上级目录</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">timeout</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">number类型,可选参数，接收超时时间，单位毫秒,默认为0</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">string,string,返回 response_code, response_message</pre></il>
+    </ul>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mkd"></a>
+    <strong  style="color: red;">
+    mkd (path, timeout)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">创建目录</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">path</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example">目录</pre>
+        </li>
+        <li><span class="parameter">timeout</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">number类型,可选参数，接收超时时间，单位毫秒,默认为0</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">string,string,返回 response_code, response_message</pre></il>
+    </ul>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "list"></a>
+    <strong  style="color: red;">
+    list (file_irectory, timeout)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">列出目录列表或文件信息</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">file_irectory</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example">目录或文件</pre>
+        </li>
+        <li><span class="parameter">timeout</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">number类型,可选参数，接收超时时间，单位毫秒,默认为0</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">string,string,返回 response_code, response_message</pre></il>
+    </ul>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "deletefolder"></a>
+    <strong  style="color: red;">
+    deletefolder (file_irectory, timeout)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">删除目录</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">file_irectory</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example">string类型,路径目录</pre>
+        </li>
+        <li><span class="parameter">timeout</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">number类型,可选参数，接收超时时间，单位毫秒,默认为0</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">string,string,返回 response_code, response_message</pre></il>
+    </ul>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "deletefile"></a>
+    <strong  style="color: red;">
+    deletefile (file_irectory, timeout)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">删除文件</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">file_irectory</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example">string类型,路径文件(相对/绝对)</pre>
+        </li>
+        <li><span class="parameter">timeout</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">number类型,可选参数，接收超时时间，单位毫秒,默认为0</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">string,string,返回 response_code, response_message</pre></il>
+    </ul>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "ftp_data_client"></a>
+    <strong  style="color: red;">
+    ftp_data_client
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">创建ftp数据连接</pre>
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ftp_client"></a>
+    <strong  style="color: red;">
+    ftp_client
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">创建ftp命令连接</pre>
+
+
+
 
 
 
@@ -176,7 +674,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2021-01-27 10:12:38 </i>
+<i style="float:right;">Last updated 2021-04-07 15:39:27 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

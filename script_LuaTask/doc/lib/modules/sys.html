@@ -33,6 +33,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
@@ -108,13 +109,15 @@
 	<td class="name" nowrap><a href="#wait">
     wait (ms)
     </a></td>
-	<td class="summary">Task任务延时函数，只能用于任务函数中</td>
+	<td class="summary">task任务延时函数
+ 只能直接或者间接的被task任务主函数调用，如果定时器创建成功，则本task会挂起</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#waitUntil">
-    waitUntil (id, ms)
+    waitUntil (id<strong  style="color: gray;">[, ms=nil]</strong>)
     </a></td>
-	<td class="summary">Task任务的条件等待函数（包括事件消息和定时器消息等条件），只能用于任务函数中。</td>
+	<td class="summary">task任务条件等待函数（支持事件消息和定时器消息）
+ 只能直接或者间接的被task任务主函数调用，调用本接口的task会挂起</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#waitUntilExt">
@@ -138,31 +141,34 @@
 	<td class="name" nowrap><a href="#timerStop">
     timerStop (val, ...)
     </a></td>
-	<td class="summary">关闭定时器</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#timerStopAll">
-    timerStopAll (fnc)
-    </a></td>
-	<td class="summary">关闭同一回调函数的所有定时器</td>
+	<td class="summary">关闭sys.timerStart和sys.timerLoopStart创建的定时器
+ 有两种方式可以唯一标识一个定时器：
+ 1、定时器ID
+ 2、定时器回调函数和可变参数</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#timerStart">
     timerStart (fnc, ms, ...)
     </a></td>
-	<td class="summary">开启一个定时器</td>
+	<td class="summary">创建并且启动一个单次定时器
+ 有两种方式可以唯一标识一个定时器：
+ 1、定时器ID
+ 2、定时器回调函数和可变参数</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#timerLoopStart">
     timerLoopStart (fnc, ms, ...)
     </a></td>
-	<td class="summary">开启一个循环定时器</td>
+	<td class="summary">创建并且启动一个循环定时器
+ 有两种方式可以唯一标识一个定时器：
+ 1、定时器ID
+ 2、定时器回调函数和可变参数</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#timerIsActive">
     timerIsActive (val, ...)
     </a></td>
-	<td class="summary">判断某个定时器是否处于开启状态</td>
+	<td class="summary">判断“通过timerStart或者timerLoopStart创建的定时器”是否处于激活状态</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#subscribe">
@@ -187,6 +193,15 @@
     rtos.on (id, handler)
     </a></td>
 	<td class="summary">注册rtos消息回调处理函数</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#fnc">
+    fnc
+    </a></td>
+	<td class="summary">关闭sys.timerStart和sys.timerLoopStart创建的某个回调函数的所有定时器</td>
 	</tr>
 </table>
 
@@ -236,65 +251,86 @@
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">Task任务延时函数，只能用于任务函数中</pre>
+    <pre class="example"  style="color: red;">task任务延时函数
+ 只能直接或者间接的被task任务主函数调用，如果定时器创建成功，则本task会挂起</pre>
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">ms</span>
             <span class="types"><span class="type">number</span></span>
-        <pre class="example">  整数，最大等待126322567毫秒</pre>
+        <pre class="example">延时时间，单位毫秒，最小1，最大0x7FFFFFFF
+             实际上支持的最小超时时间是5毫秒，小于5毫秒的时间都会被转化为5毫秒</pre>
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ul>
         <li>
-        <pre class="example">定时结束返回nil,被其他线程唤起返回调用线程传入的参数</pre></il>
+        <pre class="example"> result，分为如下三种情况：
+             1、如果定时器创建失败，本task不会被挂起，直接返回nil
+             2、如果定时器创建成功，本task被挂起，超时时间到达后，会激活本task，返回nil
+             3、如果定时器创建成功，本task被挂起，在超时时间到达之前，其他业务逻辑主动激活本task，
+                返回激活时携带的可变参数（如果不是故意为之，可能是写bug了）</pre></il>
     </ul>
 
 
 
     <h3>Usage:</h3>
     <ul>
-        <li><pre class="example">sys.wait(<span class="number">30</span>)</pre></il>
+        <li><pre class="example">task延时<span class="number">5</span>秒：
+sys.taskInit(<span class="keyword">function</span>()
+    sys.wait(<span class="number">5000</span>)
+<span class="keyword">end</span>)</pre></il>
     </ul>
 
 </dd>
     <dt>
     <a name = "waitUntil"></a>
     <strong  style="color: red;">
-    waitUntil (id, ms)
+    waitUntil (id<strong  style="color: green;">[, ms=nil]</strong>)
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">Task任务的条件等待函数（包括事件消息和定时器消息等条件），只能用于任务函数中。</pre>
+    <pre class="example"  style="color: red;">task任务条件等待函数（支持事件消息和定时器消息）
+ 只能直接或者间接的被task任务主函数调用，调用本接口的task会挂起</pre>
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">id</span>
-        <pre class="example"> 消息ID</pre>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example">消息ID，建议使用string类型</pre>
         </li>
         <li><span class="parameter">ms</span>
             <span class="types"><span class="type">number</span></span>
-        <pre class="example"> 等待超时时间，单位ms，最大等待126322567毫秒</pre>
+         [<em>此参数可选，默认值为：</em> nil]
+        <pre class="example">延时时间，单位毫秒，最小1，最大0x7FFFFFFF
+             实际上支持的最小超时时间是5毫秒，小于5毫秒的时间都会被转化为5毫秒</pre>
         </li>
     </ul>
 
     <h3>Returns:</h3>
-    <ol>
+    <ul>
         <li>
-        <pre class="example">result 接收到消息返回true，超时返回false</pre></li>
-        <li>
-        <pre class="example">data 接收到消息返回消息参数</pre></li>
-    </ol>
+        <pre class="example"> result,data，分为如下三种情况：
+             1、如果存在超时时间参数：
+                (1)、在超时时间到达之前，如果收到了等待的消息ID，则result为true，data为消息ID携带的参数（可能是多个参数）
+                (2)、在超时时间到达之前，如果没收到等待的消息ID，则result为false，data为nil
+             2、如果不存在超时时间参数：如果收到了等待的消息ID，则result为true，data为消息ID携带的参数（可能是多个参数）
+                (1)、如果收到了等待的消息ID，则result为true，data为消息ID携带的参数（可能是多个参数）
+                (2)、如果没收到等待的消息ID，则task一直挂起
+             3、还存在一种特殊情况，本task挂起时，可能被task的外部应用逻辑给主动激活（如果不是故意为之，可能是写bug了）</pre></il>
+    </ul>
 
 
 
     <h3>Usage:</h3>
     <ul>
-        <li><pre class="example">result, data = sys.waitUntil(<span class="string">"SIM_IND"</span>, <span class="number">120000</span>)</pre></il>
+        <li><pre class="example">task延时<span class="number">120</span>秒或者收到<span class="string">"SIM_IND"</span>消息：
+sys.taskInit(<span class="keyword">function</span>()
+    <span class="keyword">local</span> result, data = sys.waitUntil(<span class="string">"SIM_IND"</span>,<span class="number">120000</span>)
+<span class="keyword">end</span>)</pre></il>
     </ul>
 
 </dd>
@@ -410,61 +446,40 @@
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">关闭定时器</pre>
+    <pre class="example"  style="color: red;">关闭sys.timerStart和sys.timerLoopStart创建的定时器
+ 有两种方式可以唯一标识一个定时器：
+ 1、定时器ID
+ 2、定时器回调函数和可变参数</pre>
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">val</span>
-        <pre class="example"> 值为number时，识别为定时器ID，值为回调函数时，需要传参数</pre>
+        <pre class="example">有两种形式：
+             1、为number类型时，表示定时器ID
+             2、为function类型时，表示定时器回调函数</pre>
         </li>
         <li><span class="parameter">...</span>
-        <pre class="example"> val值为函数时，函数的可变参数</pre>
+        <pre class="example"> 可变参数，当val为定时器回调函数时，此可变参数才有意义，表示定时器回调函数的可变回调参数</pre>
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ul>
         <li>
-        <pre class="example">无</pre></il>
+        <pre class="example">nil</pre></il>
     </ul>
 
 
 
     <h3>Usage:</h3>
     <ul>
-        <li><pre class="example">timerStop(<span class="number">1</span>)</pre></il>
-    </ul>
-
-</dd>
-    <dt>
-    <a name = "timerStopAll"></a>
-    <strong  style="color: red;">
-    timerStopAll (fnc)
-    </strong>
-    </dt>
-    <dd>
-    <pre class="example"  style="color: red;">关闭同一回调函数的所有定时器</pre>
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">fnc</span>
-        <pre class="example"> 定时器回调函数</pre>
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ul>
-        <li>
-        <pre class="example">无</pre></il>
-    </ul>
-
-
-
-    <h3>Usage:</h3>
-    <ul>
-        <li><pre class="example">timerStopAll(cbFnc)</pre></il>
+        <li><pre class="example">通过定时器ID关闭一个定时器：
+<span class="keyword">local</span> timerId = sys.timerStart(publicTimerCbFnc,<span class="number">8000</span>,<span class="string">"second"</span>)
+sys.timerStop(timerId)
+通过定时器回调函数和可变参数关闭一个定时器：
+sys.timerStart(publicTimerCbFnc,<span class="number">8000</span>,<span class="string">"first"</span>)
+sys.timerStop(publicTimerCbFnc,<span class="string">"first"</span>)</pre></il>
     </ul>
 
 </dd>
@@ -475,31 +490,43 @@
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">开启一个定时器</pre>
+    <pre class="example"  style="color: red;">创建并且启动一个单次定时器
+ 有两种方式可以唯一标识一个定时器：
+ 1、定时器ID
+ 2、定时器回调函数和可变参数</pre>
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">fnc</span>
-        <pre class="example"> 定时器回调函数</pre>
+        <pre class="example"> 定时器回调函数，必须存在，不允许为nil
+            当定时器超时时间到达时，回调函数的调用形式为fnc(...)，其中...为回调参数</pre>
         </li>
         <li><span class="parameter">ms</span>
             <span class="types"><span class="type">number</span></span>
-        <pre class="example"> 整数，最大定时126322567毫秒</pre>
+        <pre class="example"> 定时器超时时间，单位毫秒，最小1，最大0x7FFFFFFF
+                                      实际上支持的最小超时时间是5毫秒，小于5毫秒的时间都会被转化为5毫秒</pre>
         </li>
         <li><span class="parameter">...</span>
-        <pre class="example"> 可变参数 fnc的参数</pre>
+        <pre class="example"> 可变参数，回调函数fnc的回调参数</pre>
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ul>
         <li>
-        <pre class="example">number 定时器ID，如果失败，返回nil</pre></il>
+        <pre class="example">number timerId，创建成功返回定时器ID；创建失败返回nil</pre></il>
     </ul>
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">创建一个<span class="number">5</span>秒的单次定时器，回调函数打印<span class="string">"timerCb"</span>，没有可变参数：
+sys.timerStart(<span class="keyword">function</span>() log.info(<span class="string">"timerCb"</span>) <span class="keyword">end</span>, <span class="number">5000</span>)
+创建一个<span class="number">5</span>秒的单次定时器，回调函数打印<span class="string">"timerCb"</span>和<span class="string">"test"</span>，可变参数为<span class="string">"test"</span>：
+sys.timerStart(<span class="keyword">function</span>(tag) log.info(<span class="string">"timerCb"</span>,tag) <span class="keyword">end</span>, <span class="number">5000</span>, <span class="string">"test"</span>)</pre></il>
+    </ul>
 
 </dd>
     <dt>
@@ -509,31 +536,43 @@
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">开启一个循环定时器</pre>
+    <pre class="example"  style="color: red;">创建并且启动一个循环定时器
+ 有两种方式可以唯一标识一个定时器：
+ 1、定时器ID
+ 2、定时器回调函数和可变参数</pre>
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">fnc</span>
-        <pre class="example"> 定时器回调函数</pre>
+        <pre class="example"> 定时器回调函数，必须存在，不允许为nil
+            当定时器超时时间到达时，回调函数的调用形式为fnc(...)，其中...为回调参数</pre>
         </li>
         <li><span class="parameter">ms</span>
             <span class="types"><span class="type">number</span></span>
-        <pre class="example"> 整数，最大定时126322567毫秒</pre>
+        <pre class="example"> 定时器超时时间，单位毫秒，最小1，最大0x7FFFFFFF
+                                      实际上支持的最小超时时间是5毫秒，小于5毫秒的时间都会被转化为5毫秒</pre>
         </li>
         <li><span class="parameter">...</span>
-        <pre class="example"> 可变参数 fnc的参数</pre>
+        <pre class="example"> 可变参数，回调函数fnc的回调参数</pre>
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ul>
         <li>
-        <pre class="example">number 定时器ID，如果失败，返回nil</pre></il>
+        <pre class="example">number timerId，创建成功返回定时器ID；创建失败返回nil</pre></il>
     </ul>
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">创建一个<span class="number">5</span>秒的循环定时器，回调函数打印<span class="string">"timerCb"</span>，没有可变参数：
+sys.timerLoopStart(<span class="keyword">function</span>() log.info(<span class="string">"timerCb"</span>) <span class="keyword">end</span>, <span class="number">5000</span>)
+创建一个<span class="number">5</span>秒的循环定时器，回调函数打印<span class="string">"timerCb"</span>和<span class="string">"test"</span>，可变参数为<span class="string">"test"</span>：
+sys.timerLoopStart(<span class="keyword">function</span>(tag) log.info(<span class="string">"timerCb"</span>,tag) <span class="keyword">end</span>, <span class="number">5000</span>, <span class="string">"test"</span>)</pre></il>
+    </ul>
 
 </dd>
     <dt>
@@ -543,29 +582,60 @@
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">判断某个定时器是否处于开启状态</pre>
+    <pre class="example"  style="color: red;">判断“通过timerStart或者timerLoopStart创建的定时器”是否处于激活状态</pre>
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">val</span>
-        <pre class="example"> 有两种形式
-一种是开启定时器时返回的定时器id，此形式时不需要再传入可变参数...就能唯一标记一个定时器
-另一种是开启定时器时的回调函数，此形式时必须再传入可变参数...才能唯一标记一个定时器</pre>
+        <pre class="example">定时器标识，有两种表示形式
+                         1、number类型，通过timerStart或者timerLoopStart创建定时器时返回的定时器ID，此情况下，不需要传入回调参数...就能唯一标识一个定时器
+                         2、function类型，通过timerStart或者timerLoopStart创建定时器时的回调函数，此情况下，如果存在回调参数，需要传入回调参数...才能唯一标识一个定时器</pre>
         </li>
         <li><span class="parameter">...</span>
-        <pre class="example"> 可变参数</pre>
+        <pre class="example"> 回调参数，和“通过timerStart或者timerLoopStart创建定时器”的回调参数保持一致</pre>
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ul>
         <li>
-        <pre class="example">number 开启状态返回true，否则nil</pre></il>
+        <pre class="example"> status，定时器激活状态；根据val的表示形式，有不同的返回值：
+                         1、val为number类型时：如果处于激活状态，则返回function类型的定时器回调函数；否则返回nil
+                         2、val为function类型时：如果处于激活状态，则返回bool类型的true；否则返回nil</pre></il>
     </ul>
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">定时器ID形式标识定时器的使用参考：
+<span class="keyword">local</span> timerId1 = sys.timerStart(<span class="keyword">function</span>() <span class="keyword">end</span>,<span class="number">5000</span>)
+
+sys.taskInit(<span class="keyword">function</span>()
+    sys.wait(<span class="number">3000</span>)
+    log.info(<span class="string">"after 3 senonds, timerId1 isActive?"</span>,sys.timerIsActive(timerId1))
+
+    sys.wait(<span class="number">3000</span>)
+    log.info(<span class="string">"after 6 senonds, timerId1 isActive?"</span>,sys.timerIsActive(timerId1))
+<span class="keyword">end</span>)
+
+
+回调函数和回调参数标识定时器的使用参考：
+<span class="keyword">local</span> <span class="keyword">function</span> timerCbFnc2(tag)
+    log.info(<span class="string">"timerCbFnc2"</span>,tag)
+<span class="keyword">end</span>
+
+sys.timerStart(timerCbFnc2,<span class="number">5000</span>,<span class="string">"test"</span>)
+
+sys.taskInit(<span class="keyword">function</span>()
+    sys.wait(<span class="number">3000</span>)
+    log.info(<span class="string">"after 3 senonds, timerCbFnc2 test isActive?"</span>,sys.timerIsActive(timerCbFnc2,<span class="string">"test"</span>))
+
+    sys.wait(<span class="number">3000</span>)
+    log.info(<span class="string">"after 6 senonds, timerCbFnc2 test isActive?"</span>,sys.timerIsActive(timerCbFnc2,<span class="string">"test"</span>))
+<span class="keyword">end</span>)</pre></il>
+    </ul>
 
 </dd>
     <dt>
@@ -693,13 +763,50 @@
 
 </dd>
 </dl>
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "fnc"></a>
+    <strong  style="color: red;">
+    fnc
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">关闭sys.timerStart和sys.timerLoopStart创建的某个回调函数的所有定时器</pre>
+
+
+    <ul>
+        <li><span class="parameter">fnc</span>
+            <span class="types"><span class="type">function</span></span>
+        <pre class="example"> 定时器回调函数</pre>
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">关闭回调函数为publicTimerCbFnc的所有定时器
+<span class="keyword">local</span> <span class="keyword">function</span> publicTimerCbFnc(tag)
+    log.info(<span class="string">"publicTimerCbFnc"</span>,tag)
+<span class="keyword">end</span>
+
+sys.timerStart(publicTimerCbFnc,<span class="number">8000</span>,<span class="string">"first"</span>)
+sys.timerStart(publicTimerCbFnc,<span class="number">8000</span>,<span class="string">"second"</span>)
+sys.timerStart(publicTimerCbFnc,<span class="number">8000</span>,<span class="string">"third"</span>)</pre></il>
+    </ul>
+
+</dd>
+</dl>
 
 
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2021-01-27 10:12:38 </i>
+<i style="float:right;">Last updated 2021-04-07 15:39:27 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

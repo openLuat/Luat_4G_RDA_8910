@@ -17,7 +17,7 @@ local function insertMsg(data,user)
 end
 
 local function sndGetCb(result)
-    log.info("socketOutMsg.sndLocCb",result)
+    log.info("socketOutMsg.sndGetCb",result)
     if result then sys.timerStart(sndGet,20000) end
 end
 

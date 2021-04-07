@@ -23,6 +23,12 @@ require "net"
 --每1分钟查询一次基站信息
 net.startQueryAll(60000, 60000)
 
+--此处关闭RNDIS网卡功能
+--否则，模块通过USB连接电脑后，会在电脑的网络适配器中枚举一个RNDIS网卡，电脑默认使用此网卡上网，导致模块使用的sim卡流量流失
+--如果项目中需要打开此功能，把ril.request("AT+RNDISCALL=0,1")修改为ril.request("AT+RNDISCALL=1,1")即可
+--注意：core固件：V0030以及之后的版本、V3028以及之后的版本，才以稳定地支持此功能
+ril.request("AT+RNDISCALL=0,1")
+
 --加载控制台调试功能模块（此处代码配置的是uart1，波特率115200）
 --此功能模块不是必须的，根据项目需求决定是否加载
 --使用时注意：控制台使用的uart不要和其他功能使用的uart冲突
@@ -59,9 +65,10 @@ errDump.request("udp://ota.airm2m.com:9072")
 --update.request()
 
 --加载BLE功能测试模块
---require "master" --主设备
-require "slave"  --从设备
+require "master" --主设备
+--require "slave"  --从设备
 --require "beacon"  --beacon
+--require "bt"  --bt classic
 
 --启动系统框架
 sys.init(0, 0)

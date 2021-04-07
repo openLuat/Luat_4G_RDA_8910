@@ -526,5 +526,9 @@ function printStatus()
     end
 end
 
+function setLowPower(tm)
+    ril.request("AT*RTIME="..tm)
+end
+
 --setDnsParsePara(4,4)
 --setTcpResendPara(1,16)

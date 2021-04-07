@@ -112,6 +112,9 @@ local function testAudioStream(streamType)
                         curr_len = curr_len + audiocore.streamplay(tStreamType,string.sub(data,curr_len,-1))
                         if curr_len>=data_len then
                             break
+                        elseif curr_len == 0 then
+                            log.error("AudioTest.AudioStreamTest", "AudioStreamPlay Error", streamType)
+                            return
                         end
                         sys.wait(10)
                     end

@@ -242,12 +242,12 @@ end
 
 --- 播放音频
 -- @number priority，音频优先级，数值越大，优先级越高
--- @string type，音频类型，目前仅支持"FILE"、"TTS"、"TTSCC","RECORD"
+--                   优先级高的播放请求会终止优先级低的播放
+--                   相同优先级的播放请求，播放策略参考：audio.setStrategy接口
+-- @string type，音频类型，目前仅支持"FILE"、"TTS"
 -- @string path，音频文件路径，跟typ有关
 --               typ为"FILE"时：表示音频文件路径
 --               typ为"TTS"时：表示要播放的UTF8编码格式的数据
---               typ为"TTSCC"时：表示要播放给通话对端的UTF8编码格式的数据
---               typ为"RECORD"时：表示要播放的录音id
 -- @number[opt=4] vol，播放音量，取值范围0到7，0为静音
 -- @function[opt=nil] cbFnc，音频播放结束时的回调函数，回调函数的调用形式如下：
 -- cbFnc(result)
@@ -261,9 +261,9 @@ end
 -- @bool[opt=nil] dup，是否循环播放，true循环，false或者nil不循环
 -- @number[opt=0] dupInterval，循环播放间隔(单位毫秒)，dup为true时，此值才有意义
 -- @return result，bool或者nil类型，同步调用成功返回true，否则返回false
--- @usage audio.play(0,"FILE","/ldata/call.mp3")
--- @usage audio.play(0,"FILE","/ldata/call.mp3",7)
--- @usage audio.play(0,"FILE","/ldata/call.mp3",7,cbFnc)
+-- @usage audio.play(0,"FILE","/lua/call.mp3")
+-- @usage audio.play(0,"FILE","/lua/call.mp3",7)
+-- @usage audio.play(0,"FILE","/lua/call.mp3",7,cbFnc)
 -- @usage 更多用法参考demo/audio/testAudio.lua
 function play(priority,type,path,vol,cbFnc,dup,dupInterval)
     log.info("audio.play",priority,type,path,vol,cbFnc,dup,dupInterval)
@@ -411,12 +411,14 @@ end
 -- 获取麦克音量等级
 -- @return number vol，麦克音量等级
 -- @usage audio.getMicVolume()
-function getMicVolume(vol)
+function getMicVolume()
     return sMicVolume
 end
 
 --- 设置优先级相同时的播放策略
--- @number strategy，优先级相同时的播放策略；0：表示继续播放正在播放的音频，忽略请求播放的新音频；1：表示停止正在播放的音频，播放请求播放的新音频
+-- @number strategy，优先级相同时的播放策略；
+--                   0：表示继续播放正在播放的音频，忽略请求播放的新音频
+--                   1：表示停止正在播放的音频，播放请求播放的新音频
 -- @return nil
 -- @usage audio.setStrategy(0)
 -- @usage audio.setStrategy(1)

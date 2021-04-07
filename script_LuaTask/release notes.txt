@@ -1,3 +1,22 @@
+发布时间：2021/04/07 15:41
+修改记录：
+    一、lib脚本修改
+	lib脚本版本号：2.3.8
+	(1)socket.lua：新增socket.setLowPower接口，可以设置网络数据传输后，允许进入休眠的延时（配合core V3XXX版本使用才生效）
+	(2)patch.lua：重定义disp.sleep，在sleep前不允许系统休眠，sleep后，允许系统休眠，修正“系统休眠状态下，disp.sleep功能失效”的问题
+	(3)ftp.lua：规范ftp api命令格式
+    二、demo脚本修改
+	(1)i2c：新增bh1750、ds3231驱动文件
+	(2)bluetooth：新增经典蓝牙从机功能、ble参数设置功能演示
+	(3)AM2320、LM75B：新增温湿度传感器功能演示
+	(4)huaWeiYun：新增华为云功能演示
+	(5)onenet_studio：修正“onenet订阅主题失败”的问题
+	(6)ctwing：新增电信云功能演示
+	(7)所有demo：main.lua中默认关闭rndis网卡功能
+
+
+
+
 发布时间：2021/01/27 09:50
 修改记录：
     一、lib脚本修改

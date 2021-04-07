@@ -172,11 +172,16 @@ local function save(s)
     os.rename(paranamebak, paraname)
 end
 
---- 初始化参数存储模块
--- @string defaultCfgFile 默认配置文件名
--- @bool burnSave 本地烧录是否保留已有参数，true为保留，false或者nil为清除
+--- 初始化参数存储管理模块
+-- @string defaultCfgFile 默认参数文件名
+-- @bool burnSave 本地烧录时是否保留已有参数，true为保留，false或者nil为清除
+--                注意：在同一个项目，不同版本中，此参数必须保持前后版本一致
 -- @return nil
--- @usage nvm.init("config.lua")
+-- @usage
+-- 初始化参数存储管理模块，默认参数文件名为config.lua，本地烧录时清除已有的参数：
+-- nvm.init("config.lua")
+-- 初始化参数存储管理模块，默认参数文件名为config.lua，本地烧录时保留已有的参数：
+-- nvm.init("config.lua",true)
 function init(defaultCfgFile,burnSave)
     local f
     f, libdftconfig = safePcall(defaultCfgFile:match("(.+)%.lua"))
@@ -195,13 +200,29 @@ end
 --- 设置某个参数的值
 -- @string k 参数名
 -- @param v，可以是任意类型，参数的新值
--- @param r，设置原因，如果传入了非nil的有效参数，并且v值和旧值相比发生了改变，会产生一个PARA_CHANGED_IND消息，携带 k,v,r 3个参数
+-- @param r，设置原因，如果传入了非nil的有效参数，并且v值和旧值相比发生了改变，
+--                     会产生一个PARA_CHANGED_IND内部消息，携带 k,v,r 3个参数
 -- @param s，是否立即写入到文件系统中，false不写入，其余的都写入
 -- @return bool或者nil，成功返回true，失败返回nil
--- @usage nvm.set("name","Luat")，参数name赋值为Luat，立即写入文件系统
--- @usage nvm.set("age",12,"SVR")，参数age赋值为12，立即写入文件系统，如果旧值不是12，会产生一个PARA_CHANGED_IND消息，携带 "age",12,"SVR" 3个参数
--- @usage nvm.set("class","Class2",nil,false)，参数class赋值为Class2，不写入文件系统
--- @usage nvm.set("score",{chinese=100,math=99,english=98})，参数score赋值为{chinese=100,math=99,english=98}，立即写入文件系统
+-- @usage 
+-- 参数name赋值为Luat，立即写入文件系统：
+-- nvm.set("name","Luat")
+-- 
+-- 参数age赋值为12，立即写入文件系统：
+-- 如果旧值不是12，会产生一个PARA_CHANGED_IND消息，携带 "age",12,"SVR" 3个参数：
+-- nvm.set("age",12,"SVR")
+--
+-- 参数class赋值为Class2，不写入文件系统：
+-- nvm.set("class","Class2",nil,false)
+--
+-- 参数score赋值为{chinese=100,math=99,english=98}，立即写入文件系统：
+-- nvm.set("score",{chinese=100,math=99,english=98})
+-- 
+-- 连续写入4个参数，前3个不保存到文件系统中，写第4个时，一次性全部保存到文件系统中：
+-- nvm.set("para1",1,nil,false)
+-- nvm.set("para2",2,nil,false)
+-- nvm.set("para3",3,nil,false)
+-- nvm.set("para4",4)
 function set(k, v, r, s)
     local bchg = true
     if type(v) ~= "table" then
@@ -250,15 +271,21 @@ end
 --- 读取某个参数的值
 -- @string k 参数名
 -- @return 参数值
--- @usage nameValue = nvm.get("name")
+-- @usage 
+-- 读取参数名为name的参数值：
+-- nameValue = nvm.get("name")
 function get(k)
     return para[k]
 end
 
---- 读取某个table类型参数的某一个索引的值
+--- 读取某个table类型参数的键名对应的值
 -- @string k table类型的参数名
--- @param kk table类型参数的某一个索引名
--- @usage nvm.gett("score","chinese")
+-- @param kk table类型参数的键名
+-- @usage
+-- 有一个table参数为score，数据如下：
+-- score = {chinese=100, math=100, english=95}
+-- 读取score中chinese对应的值：
+-- nvm.gett("score","chinese")
 function gett(k, kk)
     return para[k][kk]
 end

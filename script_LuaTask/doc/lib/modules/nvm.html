@@ -102,7 +102,7 @@
 	<td class="name" nowrap><a href="#init">
     init (defaultCfgFile, burnSave)
     </a></td>
-	<td class="summary">初始化参数存储模块</td>
+	<td class="summary">初始化参数存储管理模块</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#set">
@@ -132,7 +132,7 @@
 	<td class="name" nowrap><a href="#gett">
     gett (k, kk)
     </a></td>
-	<td class="summary">读取某个table类型参数的某一个索引的值</td>
+	<td class="summary">读取某个table类型参数的键名对应的值</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#restore">
@@ -162,18 +162,19 @@
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">初始化参数存储模块</pre>
+    <pre class="example"  style="color: red;">初始化参数存储管理模块</pre>
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">defaultCfgFile</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
-        <pre class="example"> 默认配置文件名</pre>
+        <pre class="example"> 默认参数文件名</pre>
         </li>
         <li><span class="parameter">burnSave</span>
             <span class="types"><span class="type">bool</span></span>
-        <pre class="example"> 本地烧录是否保留已有参数，true为保留，false或者nil为清除</pre>
+        <pre class="example"> 本地烧录时是否保留已有参数，true为保留，false或者nil为清除
+                注意：在同一个项目，不同版本中，此参数必须保持前后版本一致</pre>
         </li>
     </ul>
 
@@ -187,7 +188,10 @@
 
     <h3>Usage:</h3>
     <ul>
-        <li><pre class="example">nvm.init(<span class="string">"config.lua"</span>)</pre></il>
+        <li><pre class="example">初始化参数存储管理模块，默认参数文件名为config.lua，本地烧录时清除已有的参数：
+nvm.init(<span class="string">"config.lua"</span>)
+初始化参数存储管理模块，默认参数文件名为config.lua，本地烧录时保留已有的参数：
+nvm.init(<span class="string">"config.lua"</span>,<span class="keyword">true</span>)</pre></il>
     </ul>
 
 </dd>
@@ -211,7 +215,8 @@
         <pre class="example">可以是任意类型，参数的新值</pre>
         </li>
         <li><span class="parameter">r</span>
-        <pre class="example">设置原因，如果传入了非nil的有效参数，并且v值和旧值相比发生了改变，会产生一个PARA_CHANGED_IND消息，携带 k,v,r 3个参数</pre>
+        <pre class="example">设置原因，如果传入了非nil的有效参数，并且v值和旧值相比发生了改变，
+                     会产生一个PARA_CHANGED_IND内部消息，携带 k,v,r 3个参数</pre>
         </li>
         <li><span class="parameter">s</span>
         <pre class="example">是否立即写入到文件系统中，false不写入，其余的都写入</pre>
@@ -228,10 +233,24 @@
 
     <h3>Usage:</h3>
     <ul>
-        <li><pre class="example">nvm.set(<span class="string">"name"</span>,<span class="string">"Luat"</span>)，参数name赋值为Luat，立即写入文件系统</pre></il>
-        <li><pre class="example">nvm.set(<span class="string">"age"</span>,<span class="number">12</span>,<span class="string">"SVR"</span>)，参数age赋值为<span class="number">12</span>，立即写入文件系统，如果旧值不是<span class="number">12</span>，会产生一个PARA_CHANGED_IND消息，携带 <span class="string">"age"</span>,<span class="number">12</span>,<span class="string">"SVR"</span> <span class="number">3</span>个参数</pre></il>
-        <li><pre class="example">nvm.set(<span class="string">"class"</span>,<span class="string">"Class2"</span>,<span class="keyword">nil</span>,<span class="keyword">false</span>)，参数class赋值为Class2，不写入文件系统</pre></il>
-        <li><pre class="example">nvm.set(<span class="string">"score"</span>,{chinese=<span class="number">100</span>,<span class="global">math</span>=<span class="number">99</span>,english=<span class="number">98</span>})，参数score赋值为{chinese=<span class="number">100</span>,<span class="global">math</span>=<span class="number">99</span>,english=<span class="number">98</span>}，立即写入文件系统</pre></il>
+        <li><pre class="example">参数name赋值为Luat，立即写入文件系统：
+nvm.set(<span class="string">"name"</span>,<span class="string">"Luat"</span>)
+
+参数age赋值为<span class="number">12</span>，立即写入文件系统：
+如果旧值不是<span class="number">12</span>，会产生一个PARA_CHANGED_IND消息，携带 <span class="string">"age"</span>,<span class="number">12</span>,<span class="string">"SVR"</span> <span class="number">3</span>个参数：
+nvm.set(<span class="string">"age"</span>,<span class="number">12</span>,<span class="string">"SVR"</span>)
+
+参数class赋值为Class2，不写入文件系统：
+nvm.set(<span class="string">"class"</span>,<span class="string">"Class2"</span>,<span class="keyword">nil</span>,<span class="keyword">false</span>)
+
+参数score赋值为{chinese=<span class="number">100</span>,<span class="global">math</span>=<span class="number">99</span>,english=<span class="number">98</span>}，立即写入文件系统：
+nvm.set(<span class="string">"score"</span>,{chinese=<span class="number">100</span>,<span class="global">math</span>=<span class="number">99</span>,english=<span class="number">98</span>})
+
+连续写入<span class="number">4</span>个参数，前<span class="number">3</span>个不保存到文件系统中，写第<span class="number">4</span>个时，一次性全部保存到文件系统中：
+nvm.set(<span class="string">"para1"</span>,<span class="number">1</span>,<span class="keyword">nil</span>,<span class="keyword">false</span>)
+nvm.set(<span class="string">"para2"</span>,<span class="number">2</span>,<span class="keyword">nil</span>,<span class="keyword">false</span>)
+nvm.set(<span class="string">"para3"</span>,<span class="number">3</span>,<span class="keyword">nil</span>,<span class="keyword">false</span>)
+nvm.set(<span class="string">"para4"</span>,<span class="number">4</span>)</pre></il>
     </ul>
 
 </dd>
@@ -335,7 +354,8 @@
 
     <h3>Usage:</h3>
     <ul>
-        <li><pre class="example">nameValue = nvm.get(<span class="string">"name"</span>)</pre></il>
+        <li><pre class="example">读取参数名为name的参数值：
+nameValue = nvm.get(<span class="string">"name"</span>)</pre></il>
     </ul>
 
 </dd>
@@ -346,7 +366,7 @@
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">读取某个table类型参数的某一个索引的值</pre>
+    <pre class="example"  style="color: red;">读取某个table类型参数的键名对应的值</pre>
 
 
     <h3>Parameters:</h3>
@@ -356,7 +376,7 @@
         <pre class="example"> table类型的参数名</pre>
         </li>
         <li><span class="parameter">kk</span>
-        <pre class="example"> table类型参数的某一个索引名</pre>
+        <pre class="example"> table类型参数的键名</pre>
         </li>
     </ul>
 
@@ -365,7 +385,10 @@
 
     <h3>Usage:</h3>
     <ul>
-        <li><pre class="example">nvm.gett(<span class="string">"score"</span>,<span class="string">"chinese"</span>)</pre></il>
+        <li><pre class="example">有一个<span class="global">table</span>参数为score，数据如下：
+score = {chinese=<span class="number">100</span>, <span class="global">math</span>=<span class="number">100</span>, english=<span class="number">95</span>}
+读取score中chinese对应的值：
+nvm.gett(<span class="string">"score"</span>,<span class="string">"chinese"</span>)</pre></il>
     </ul>
 
 </dd>
@@ -429,7 +452,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2021-01-27 10:12:38 </i>
+<i style="float:right;">Last updated 2021-04-07 15:39:27 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

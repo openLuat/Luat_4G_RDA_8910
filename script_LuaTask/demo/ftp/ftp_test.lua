@@ -9,27 +9,26 @@
 require"ftp"
 module(..., package.seeall)
 
---- FTP客户端
--- @string ftp_mode,string类型,FTP模式"PASV" or "PORT"  默认PASV:被动模式,PORT:主动模式 (暂时仅支持被动模式)
--- @string host,string类型,ip地址
--- @string username,string类型,用户名
--- @string password,string类型,密码
--- @string transmission_mode,string类型,传输模式"RETR" or "STOR"  RETR:下载模式,STOR:上传模式
--- @string remote_file,string类型,远程文件名
--- @string local_file,string类型,本地文件名
--- @number timeout,number类型,超时时间
--- @return number,string,正常返回response_code, response_header, response_body
-
-
-
 --挂载SD卡
 io.mount(io.SDCARD)
 
 function ftp_thread()
+    log.info("ftp_login", ftp.login("PASV","36.7.87.100",21,"user","123456")) --登录
+    log.info("ftp_command SYST", ftp.command("SYST"))--查看服务器信息
+    log.info("ftp_list /", ftp.list("/"))--显示目录下文件
+    log.info("ftp_list /ftp_lib_test_down.txt", ftp.list("/ftp_lib_test_down.txt"))--显示文件详细信息
+    log.info("ftp_pwd ", ftp.pwd())--显示工作目录
+    log.info("ftp_mkd ", ftp.mkd("/ftp_test"))--创建目录
+    log.info("ftp_cwd ", ftp.cwd("/ftp_test"))--切换目录
+    log.info("ftp_pwd ", ftp.pwd())--显示工作目录
+    log.info("ftp_cdup ", ftp.cdup())--返回上级工作目录
+    log.info("ftp_pwd ", ftp.pwd())--显示工作目录
 
-    ftp.request("PASV","39.108.117.70","airftp",123456,"RETR","/UP/test_download.txt","/sdcard0/test_download.txt")
+    --ftp.upload("/ftp_lib_test_up.txt","/sdcard0/ftp_lib_test_up.txt")
+    ftp.download("/1040K.jpg","/sdcard0/1040K.jpg")
+
+    ftp.close()
 end
-
 
 sys.taskInit(ftp_thread)
 

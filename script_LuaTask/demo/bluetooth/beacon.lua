@@ -7,8 +7,6 @@
 -- @注意 需要使用core(Luat_VXXXX_RDA8910_BT_FLOAT)版本
 module(..., package.seeall)
 
-local bt_test = {}
-
 local function init()
     log.info("bt", "init")
     rtos.on(rtos.MSG_BLUETOOTH, function(msg)
@@ -32,7 +30,7 @@ local function advertising()
     btcore.advertising(1)-- 打开广播
 end
 
-ble_test = {init, poweron,advertising}
+local ble_test = {init, poweron,advertising}
 
 sys.taskInit(function()
     for _, f in ipairs(ble_test) do

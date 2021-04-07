@@ -48,10 +48,4 @@ sys.timerLoopStart(read3,1000)
 require"misc"
 sys.timerLoopStart(function ()
     log.info("vbatt.read",misc.getVbatt())
-    
-    intermediate = '+CPBR: 3,"19121459630",129,"gNh"'
-
-    local num,name = string.match(intermediate,"%+CPBR:%s*%d+,\"([#%*%+%d]*)\",%d+,\"(%w*)\"")
-
-    print(num,name)
 end,1000)

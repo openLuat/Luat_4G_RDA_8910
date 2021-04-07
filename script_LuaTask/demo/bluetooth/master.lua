@@ -7,8 +7,6 @@
 -- @注意 需要使用core(Luat_VXXXX_RDA8910_BT_FLOAT)版本
 module(..., package.seeall)
 
-local bt_test = {}
-
 local function init()
     log.info("bt", "init")
     rtos.on(rtos.MSG_BLUETOOTH, function(msg)
@@ -138,6 +136,7 @@ local function data_trans()
     --btcore.opennotification("9ecadc240ee5a9e093f3a3b50200406e"); --打开通知 对应特征uuid  
     
     log.info("bt.send", "Hello I'm Luat BLE")
+    sys.wait(1000)
     while true do
         local data = "123456"
         btcore.send(data,0xfee1, bt_connect.handle) --发送数据(数据 对应特征uuid 连接句柄)
@@ -163,7 +162,7 @@ local function data_trans()
     end
 end
 
-ble_test = {init, poweron, scan, data_trans}
+local ble_test = {init, poweron, scan, data_trans}
 
 sys.taskInit(function()
     for _, f in ipairs(ble_test) do

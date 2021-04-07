@@ -10,7 +10,7 @@ require "patch"
 module(..., package.seeall)
 
 -- lib脚本版本号，只要lib中的任何一个脚本做了修改，都需要更新此版本号
-SCRIPT_LIB_VER = "2.3.7"
+SCRIPT_LIB_VER = "2.3.8"
 
 -- TaskID最大值
 local TASK_TIMER_ID_MAX = 0x1FFFFFFF
@@ -48,10 +48,21 @@ function restart(r)
     rtos.restart()
 end
 
---- Task任务延时函数，只能用于任务函数中
--- @number ms  整数，最大等待126322567毫秒
--- @return 定时结束返回nil,被其他线程唤起返回调用线程传入的参数
--- @usage sys.wait(30)
+
+--- task任务延时函数
+-- 只能直接或者间接的被task任务主函数调用，如果定时器创建成功，则本task会挂起
+-- @number ms，延时时间，单位毫秒，最小1，最大0x7FFFFFFF
+--             实际上支持的最小超时时间是5毫秒，小于5毫秒的时间都会被转化为5毫秒
+-- @return result，分为如下三种情况：
+--             1、如果定时器创建失败，本task不会被挂起，直接返回nil
+--             2、如果定时器创建成功，本task被挂起，超时时间到达后，会激活本task，返回nil
+--             3、如果定时器创建成功，本task被挂起，在超时时间到达之前，其他业务逻辑主动激活本task，
+--                返回激活时携带的可变参数（如果不是故意为之，可能是写bug了）
+-- @usage
+-- task延时5秒：
+-- sys.taskInit(function()
+--     sys.wait(5000)
+-- end)
 function wait(ms)
     -- 参数检测，参数不能为负值
     assert(ms > 0, "The wait time cannot be negative!")
@@ -75,12 +86,25 @@ function wait(ms)
     end
 end
 
---- Task任务的条件等待函数（包括事件消息和定时器消息等条件），只能用于任务函数中。
--- @param id 消息ID
--- @number ms 等待超时时间，单位ms，最大等待126322567毫秒
--- @return result 接收到消息返回true，超时返回false
--- @return data 接收到消息返回消息参数
--- @usage result, data = sys.waitUntil("SIM_IND", 120000)
+
+--- task任务条件等待函数（支持事件消息和定时器消息）
+-- 只能直接或者间接的被task任务主函数调用，调用本接口的task会挂起
+-- @string id，消息ID，建议使用string类型
+-- @number[opt=nil] ms，延时时间，单位毫秒，最小1，最大0x7FFFFFFF
+--             实际上支持的最小超时时间是5毫秒，小于5毫秒的时间都会被转化为5毫秒
+-- @return result,data，分为如下三种情况：
+--             1、如果存在超时时间参数：
+--                (1)、在超时时间到达之前，如果收到了等待的消息ID，则result为true，data为消息ID携带的参数（可能是多个参数）
+--                (2)、在超时时间到达之前，如果没收到等待的消息ID，则result为false，data为nil
+--             2、如果不存在超时时间参数：如果收到了等待的消息ID，则result为true，data为消息ID携带的参数（可能是多个参数）
+--                (1)、如果收到了等待的消息ID，则result为true，data为消息ID携带的参数（可能是多个参数）
+--                (2)、如果没收到等待的消息ID，则task一直挂起
+--             3、还存在一种特殊情况，本task挂起时，可能被task的外部应用逻辑给主动激活（如果不是故意为之，可能是写bug了）
+-- @usage
+-- task延时120秒或者收到"SIM_IND"消息：
+-- sys.taskInit(function()
+--     local result, data = sys.waitUntil("SIM_IND",120000)
+-- end)
 function waitUntil(id, ms)
     subscribe(id, coroutine.running())
     local message = ms and {wait(ms)} or {coroutine.yield()}
@@ -159,11 +183,22 @@ local function cmpTable(t1, t2)
     return false
 end
 
---- 关闭定时器
--- @param val 值为number时，识别为定时器ID，值为回调函数时，需要传参数
--- @param ... val值为函数时，函数的可变参数
--- @return 无
--- @usage timerStop(1)
+--- 关闭sys.timerStart和sys.timerLoopStart创建的定时器
+-- 有两种方式可以唯一标识一个定时器：
+-- 1、定时器ID
+-- 2、定时器回调函数和可变参数
+-- @param val，有两种形式：
+--             1、为number类型时，表示定时器ID
+--             2、为function类型时，表示定时器回调函数
+-- @param ... 可变参数，当val为定时器回调函数时，此可变参数才有意义，表示定时器回调函数的可变回调参数
+-- @return nil
+-- @usage
+-- 通过定时器ID关闭一个定时器：
+-- local timerId = sys.timerStart(publicTimerCbFnc,8000,"second")
+-- sys.timerStop(timerId)
+-- 通过定时器回调函数和可变参数关闭一个定时器：
+-- sys.timerStart(publicTimerCbFnc,8000,"first")
+-- sys.timerStop(publicTimerCbFnc,"first")
 function timerStop(val, ...)
     -- val 为定时器ID
 	local arg={ ... }
@@ -185,10 +220,20 @@ function timerStop(val, ...)
     end
 end
 
---- 关闭同一回调函数的所有定时器
--- @param fnc 定时器回调函数
--- @return 无
--- @usage timerStopAll(cbFnc)
+--- 关闭sys.timerStart和sys.timerLoopStart创建的某个回调函数的所有定时器
+-- @function fnc， 定时器回调函数
+-- @return nil
+-- @usage 
+-- 关闭回调函数为publicTimerCbFnc的所有定时器
+-- local function publicTimerCbFnc(tag)
+--     log.info("publicTimerCbFnc",tag)
+-- end
+-- 
+-- sys.timerStart(publicTimerCbFnc,8000,"first")
+-- sys.timerStart(publicTimerCbFnc,8000,"second")
+-- sys.timerStart(publicTimerCbFnc,8000,"third")
+
+-- sys.timerStopAll(publicTimerCbFnc)
 function timerStopAll(fnc)
     for k, v in pairs(timerPool) do
         if type(v) == "table" and v.cb == fnc or v == fnc then
@@ -198,11 +243,21 @@ function timerStopAll(fnc)
     end
 end
 
---- 开启一个定时器
--- @param fnc 定时器回调函数
--- @number ms 整数，最大定时126322567毫秒
--- @param ... 可变参数 fnc的参数
--- @return number 定时器ID，如果失败，返回nil
+--- 创建并且启动一个单次定时器
+-- 有两种方式可以唯一标识一个定时器：
+-- 1、定时器ID
+-- 2、定时器回调函数和可变参数
+-- @param fnc 定时器回调函数，必须存在，不允许为nil
+--            当定时器超时时间到达时，回调函数的调用形式为fnc(...)，其中...为回调参数
+-- @number ms 定时器超时时间，单位毫秒，最小1，最大0x7FFFFFFF
+--                                      实际上支持的最小超时时间是5毫秒，小于5毫秒的时间都会被转化为5毫秒
+-- @param ... 可变参数，回调函数fnc的回调参数
+-- @return number timerId，创建成功返回定时器ID；创建失败返回nil
+-- @usage
+-- 创建一个5秒的单次定时器，回调函数打印"timerCb"，没有可变参数：
+-- sys.timerStart(function() log.info("timerCb") end, 5000)
+-- 创建一个5秒的单次定时器，回调函数打印"timerCb"和"test"，可变参数为"test"：
+-- sys.timerStart(function(tag) log.info("timerCb",tag) end, 5000, "test")
 function timerStart(fnc, ms, ...)
     --回调函数和时长检测
 	local arg={ ... }
@@ -239,23 +294,62 @@ function timerStart(fnc, ms, ...)
     return msgId
 end
 
---- 开启一个循环定时器
--- @param fnc 定时器回调函数
--- @number ms 整数，最大定时126322567毫秒
--- @param ... 可变参数 fnc的参数
--- @return number 定时器ID，如果失败，返回nil
+--- 创建并且启动一个循环定时器
+-- 有两种方式可以唯一标识一个定时器：
+-- 1、定时器ID
+-- 2、定时器回调函数和可变参数
+-- @param fnc 定时器回调函数，必须存在，不允许为nil
+--            当定时器超时时间到达时，回调函数的调用形式为fnc(...)，其中...为回调参数
+-- @number ms 定时器超时时间，单位毫秒，最小1，最大0x7FFFFFFF
+--                                      实际上支持的最小超时时间是5毫秒，小于5毫秒的时间都会被转化为5毫秒
+-- @param ... 可变参数，回调函数fnc的回调参数
+-- @return number timerId，创建成功返回定时器ID；创建失败返回nil
+-- @usage
+-- 创建一个5秒的循环定时器，回调函数打印"timerCb"，没有可变参数：
+-- sys.timerLoopStart(function() log.info("timerCb") end, 5000)
+-- 创建一个5秒的循环定时器，回调函数打印"timerCb"和"test"，可变参数为"test"：
+-- sys.timerLoopStart(function(tag) log.info("timerCb",tag) end, 5000, "test")
 function timerLoopStart(fnc, ms, ...)
     local tid = timerStart(fnc, ms, ...)
     if tid then loop[tid] = (ms<5 and 5 or ms) end
     return tid
 end
 
---- 判断某个定时器是否处于开启状态
--- @param val 有两种形式
---一种是开启定时器时返回的定时器id，此形式时不需要再传入可变参数...就能唯一标记一个定时器
---另一种是开启定时器时的回调函数，此形式时必须再传入可变参数...才能唯一标记一个定时器
--- @param ... 可变参数
--- @return number 开启状态返回true，否则nil
+--- 判断“通过timerStart或者timerLoopStart创建的定时器”是否处于激活状态
+-- @param val，定时器标识，有两种表示形式
+--                         1、number类型，通过timerStart或者timerLoopStart创建定时器时返回的定时器ID，此情况下，不需要传入回调参数...就能唯一标识一个定时器
+--                         2、function类型，通过timerStart或者timerLoopStart创建定时器时的回调函数，此情况下，如果存在回调参数，需要传入回调参数...才能唯一标识一个定时器
+-- @param ... 回调参数，和“通过timerStart或者timerLoopStart创建定时器”的回调参数保持一致
+-- @return status，定时器激活状态；根据val的表示形式，有不同的返回值：
+--                         1、val为number类型时：如果处于激活状态，则返回function类型的定时器回调函数；否则返回nil
+--                         2、val为function类型时：如果处于激活状态，则返回bool类型的true；否则返回nil
+-- @usage
+-- 定时器ID形式标识定时器的使用参考：
+-- local timerId1 = sys.timerStart(function() end,5000)
+-- 
+-- sys.taskInit(function()
+--     sys.wait(3000)
+--     log.info("after 3 senonds, timerId1 isActive?",sys.timerIsActive(timerId1))
+--     
+--     sys.wait(3000)
+--     log.info("after 6 senonds, timerId1 isActive?",sys.timerIsActive(timerId1))
+-- end)
+--
+--
+-- 回调函数和回调参数标识定时器的使用参考：
+-- local function timerCbFnc2(tag)
+--     log.info("timerCbFnc2",tag)
+-- end
+-- 
+-- sys.timerStart(timerCbFnc2,5000,"test")
+-- 
+-- sys.taskInit(function()
+--     sys.wait(3000)
+--     log.info("after 3 senonds, timerCbFnc2 test isActive?",sys.timerIsActive(timerCbFnc2,"test"))
+--     
+--     sys.wait(3000)
+--     log.info("after 6 senonds, timerCbFnc2 test isActive?",sys.timerIsActive(timerCbFnc2,"test"))
+-- end)
 function timerIsActive(val, ...)
 	local arg={ ... }
     if type(val) == "number" then

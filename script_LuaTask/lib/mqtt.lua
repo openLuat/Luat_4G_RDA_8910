@@ -309,7 +309,7 @@ end
 --     clientKey = "client.key", --客户端私钥文件(Base64编码 X.509格式)
 --     clientPassword = "123456", --客户端证书文件密码[可选]
 -- }
--- @number timeout, 链接服务器最长超时时间
+-- @number[opt=120] timeout 可选参数，连接超时时间，单位秒
 -- @return result true表示成功，false或者nil表示失败
 -- @usage mqttc = mqtt.client("clientid-123", nil, nil, false); mqttc:connect("mqttserver.com", 1883, "tcp", 5)
 function mqttc:connect(host, port, transport, cert, timeout)

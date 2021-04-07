@@ -85,8 +85,13 @@ local function rsp(cmd, success, response, intermediate)
     end
 end
 
+--- 获取core固件名
+-- @return string version，core固件名
+-- @usage
+-- local version = misc.getVersion()
+-- 如果core为Luat_V0026_RDA8910_TTS_FLOAT，则version为string类型的"Luat_V0026_RDA8910_TTS_FLOAT"
 function getVersion()
-    return ver
+    return rtos.get_version()
 end
 
 --- 设置系统时间
@@ -240,9 +245,9 @@ ril.regRsp("+CGSN", rsp)
 ril.regRsp("+MUID", rsp)
 ril.regRsp("+WIMEI", rsp)
 ril.regRsp("+AMFAC", rsp)
-ril.regRsp('+VER', rsp, 4, '^[%w_]+$')
+--ril.regRsp('+VER', rsp, 4, '^[%w_]+$')
 ril.regRsp("+CALIBINFO",rsp)
-req('AT+VER')
+--req('AT+VER')
 --查询序列号
 req("AT+WISN?")
 --查询IMEI
