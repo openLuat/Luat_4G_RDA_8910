@@ -26,6 +26,9 @@ end
 function command(command,timeout)
     if not ftp_client:send(command.."\r\n") then close() return '426', 'SOCKET_SEND_ERROR' end
     local r,n = ftp_client:recv(timeout)
+    if r==true and n:sub(1,3)=="230" then
+        r ,n= ftp_client:recv(timeout)
+    end
     log.info("ftp_command",n)
     if not r then close() return '503', 'SOCKET_RECV_TIMOUT'
     else return n:sub(1,3), n:sub(4,#n) end
@@ -38,6 +41,9 @@ local function pasv_connect(timeout)
     ---被动模式
     if not ftp_client:send("PASV\r\n") then close() return '426', 'SOCKET_SEND_ERROR' end
     local r ,n= ftp_client:recv(timeout)
+    if r==true and n:sub(1,3)=="230" then
+        r ,n= ftp_client:recv(timeout)
+    end
     local h1,h2,h3,h4,p1,p2=n:match ("(%d+),(%d+),(%d+),(%d+),(%d+),(%d+)")
     data_client_ip,data_client_port = h1..'.'..h2..'.'..h3..'.'..h4,string.format("%d",(p1*256+p2))
     log.info("ftp ip",data_client_ip,"port",data_client_port)
@@ -97,9 +103,9 @@ end
 function upload(remote_file,local_file,timeout)
     pasv_connect()
     --文件上传
-    if not ftp_client:send("STOR "..remote_file.."\r\n") then close()  ftp_data_client:close() return '426', 'SOCKET_SEND_ERROR' end
+    if not ftp_client:send("APPE "..remote_file.."\r\n") then close()  ftp_data_client:close() return '426', 'SOCKET_SEND_ERROR' end
     local r , n= ftp_client:recv(timeout)
-    log.info("ftp 上传",n)
+    log.info("ftp upload",n)
     if not r then close()  ftp_data_client:close() return '503', 'SOCKET_RECV_TIMOUT' end
     if n:sub(1,3) == '553' then log.error("ftp STOR error ",n) close()  ftp_data_client:close() return  '553', n end
     local file = io.open(local_file, "r")
@@ -137,21 +143,28 @@ function download(remote_file,local_file,timeout)
     --文件下载
     if not ftp_client:send("RETR "..remote_file.."\r\n") then close()  ftp_data_client:close() return '426', 'SOCKET_SEND_ERROR' end
     local r , n= ftp_client:recv(timeout)
-    log.info("ftp 下载",n)
+    log.info("ftp download",n)
     if not r then close()  ftp_data_client:close() return '503', 'SOCKET_RECV_TIMOUT' end
     if io.exists(local_file)then
         os.remove(local_file)
         log.info("删除文件",local_file)
     end
-    local file = io.open(local_file,"a+")
-    while true do
-        local r , n= ftp_data_client:recv(timeout)
-        if r then file:write (n)
-        else break end
+    local file = io.open(local_file,"ab")
+    if file then
+        while true do
+            local r , file_data= ftp_data_client:recv(timeout)
+            if r then
+                if file_data:find("226 Successfully transferred ")==nil and file_data:find("226 Transfer OK")==nil then file:write (file_data) end
+            else break end
+        end
+        file:close()
+        ftp_data_client:close()
+        return '200', 'ftp success'
+    else
+        log.info("文件打开失败")
+        ftp_data_client:close()
+        return '503', 'file open error'
     end
-    file:close()
-    ftp_data_client:close()
-    return '200', 'ftp success'
 end
 
 --- 设置FTP传输类型 A:ascii I:Binary
@@ -203,12 +216,14 @@ function list(file_irectory,timeout)
     local r , n= ftp_client:recv(timeout)
     log.info("ftp",r,n)
     if not r then close()  ftp_data_client:close() return '503', 'SOCKET_RECV_TIMOUT' end
-
+    local data = ""
+    while true do
         local r , n= ftp_data_client:recv(timeout)
-        if not r then close()  ftp_data_client:close() return '503', 'SOCKET_RECV_TIMOUT' end
-
+        if r then data = data..n
+        else break end
+    end
     ftp_data_client:close()
-    return r, n
+    return r, data
 end
 
 

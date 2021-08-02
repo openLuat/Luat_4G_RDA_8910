@@ -1,0 +1,464 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Luat开源项目脚本lib</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>script_LuaTask lib</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/aLiYun.html">aLiYun</a></li>
+  <li><a href="../modules/aLiYunOta.html">aLiYunOta</a></li>
+  <li><a href="../modules/agps.html">agps</a></li>
+  <li><a href="../modules/agpsHxxt.html">agpsHxxt</a></li>
+  <li><a href="../modules/agpsZkw.html">agpsZkw</a></li>
+  <li><a href="../modules/audio.html">audio</a></li>
+  <li><a href="../modules/cc.html">cc</a></li>
+  <li><a href="../modules/clib.html">clib</a></li>
+  <li><a href="../modules/common.html">common</a></li>
+  <li><a href="../modules/console.html">console</a></li>
+  <li><a href="../modules/errDump.html">errDump</a></li>
+  <li><a href="../modules/ftp.html">ftp</a></li>
+  <li><a href="../modules/gps.html">gps</a></li>
+  <li><a href="../modules/gpsHxxt.html">gpsHxxt</a></li>
+  <li><a href="../modules/gpsZkw.html">gpsZkw</a></li>
+  <li><a href="../modules/http.html">http</a></li>
+  <li><a href="../modules/lbsLoc.html">lbsLoc</a></li>
+  <li><a href="../modules/led.html">led</a></li>
+  <li><a href="../modules/link.html">link</a></li>
+  <li><a href="../modules/log.html">log</a></li>
+  <li><a href="../modules/misc.html">misc</a></li>
+  <li><a href="../modules/mqtt.html">mqtt</a></li>
+  <li><a href="../modules/net.html">net</a></li>
+  <li><a href="../modules/netLed.html">netLed</a></li>
+  <li><a href="../modules/ntp.html">ntp</a></li>
+  <li><a href="../modules/nvm.html">nvm</a></li>
+  <li><a href="../modules/patch.html">patch</a></li>
+  <li><a href="../modules/pb.html">pb</a></li>
+  <li><a href="../modules/pins.html">pins</a></li>
+  <li><a href="../modules/pm.html">pm</a></li>
+  <li><a href="../modules/powerKey.html">powerKey</a></li>
+  <li><a href="../modules/record.html">record</a></li>
+  <li><a href="../modules/ril.html">ril</a></li>
+  <li><a href="../modules/scanCode.html">scanCode</a></li>
+  <li><a href="../modules/sim.html">sim</a></li>
+  <li><a href="../modules/sms.html">sms</a></li>
+  <li><a href="../modules/socket.html">socket</a></li>
+  <li><a href="../modules/sys.html">sys</a></li>
+  <li><a href="../modules/uiWin.html">uiWin</a></li>
+  <li><a href="../modules/update.html">update</a></li>
+  <li><a href="../modules/utils.html">utils</a></li>
+  <li><strong>websocket</strong></li>
+  <li><a href="../modules/wifiScan.html">wifiScan</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>websocket</code></h1>
+<p>模块功能：websocket客户端</p>
+<p></p>
+    <h3>Info:</h3>
+    <ul>
+        <li><strong>Copyright</strong>: OpenLuat.com</li>
+        <li><strong>Release</strong>: 2021.04.08</li>
+        <li><strong>License</strong>: MIT</li>
+        <li><strong>Author</strong>: OpenLuat</li>
+    </ul>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#new">
+    new (url, cert)
+    </a></td>
+	<td class="summary">创建 websocket 对象</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ws:on">
+    ws:on (event, callback)
+    </a></td>
+	<td class="summary">ws:on 注册函数</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ws:connect">
+    ws:connect (url, timeout)
+    </a></td>
+	<td class="summary">websocket 与 websocket 服务器建立连接</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ws:sendFrame">
+    ws:sendFrame (opcode, data:)
+    </a></td>
+	<td class="summary">websocket发送帧方法</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ws:recv">
+    ws:recv ()
+    </a></td>
+	<td class="summary">处理 websocket 发过来的数据并拼包</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ws:close">
+    ws:close (code:, reason)
+    </a></td>
+	<td class="summary">关闭 websocket 与服务器的链接</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ws:state">
+    ws:state ()
+    </a></td>
+	<td class="summary">获取websocket当前状态</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ws:online">
+    ws:online ()
+    </a></td>
+	<td class="summary">获取websocket与服务器连接状态</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ws:start">
+    ws:start (<strong  style="color: gray;">[keepAlive=nil]</strong><strong  style="color: gray;">[, proc=nil]</strong>)
+    </a></td>
+	<td class="summary">websocket 需要在任务中启动,带自动重连,支持心跳协议</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "new"></a>
+    <strong  style="color: red;">
+    new (url, cert)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">创建 websocket 对象</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">url</span>
+        <pre class="example"></pre>
+        </li>
+        <li><span class="parameter">cert</span>
+        <pre class="example"></pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">table：返回1个websocket对象</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example"><span class="keyword">local</span> ws = websocket.new(<span class="string">"ws://121.40.165.18:8800"</span>)</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "ws:on"></a>
+    <strong  style="color: red;">
+    ws:on (event, callback)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">ws:on 注册函数</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">event</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example">事件，可选值"open","message","close","error","pong"</pre>
+        </li>
+        <li><span class="parameter">callback</span>
+            <span class="types"><span class="type">function</span></span>
+        <pre class="example">回调方法，message|error|pong 形参是该方法需要的数据。</pre>
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">mt:on(<span class="string">"message"</span>,<span class="keyword">function</span>(message) <span class="keyword">local</span> <span class="global">print</span>(message)<span class="keyword">end</span>)</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "ws:connect"></a>
+    <strong  style="color: red;">
+    ws:connect (url, timeout)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">websocket 与 websocket 服务器建立连接</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">url</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example">websocket服务器的连接地址,格式为ws(或wss)://xxx 开头</pre>
+        </li>
+        <li><span class="parameter">timeout</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example"> 与 websocket 服务器建立连接最长超时</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">true 表示连接成功,false or nil 表示连接失败</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example"><span class="keyword">while</span> <span class="keyword">not</span> ws:connect(<span class="number">20000</span>) <span class="keyword">do</span> sys.wait(<span class="number">2000</span>) <span class="keyword">end</span></pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "ws:sendFrame"></a>
+    <strong  style="color: red;">
+    ws:sendFrame (opcode, data:)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">websocket发送帧方法</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">opcode</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">0x0 -- 0xF,其他值非法,代码意义参考websocket手册</pre>
+        </li>
+        <li><span class="parameter">data:</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example"> 用户要发送的数据</pre>
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">self:sendFrame(<span class="keyword">true</span>, <span class="number">0x1</span>, <span class="string">"www.openluat.com"</span>)</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "ws:recv"></a>
+    <strong  style="color: red;">
+    ws:recv ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">处理 websocket 发过来的数据并拼包</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        <pre class="example">result, boolean: 返回数据的状态 true 为正常, false 为失败</pre></li>
+        <li>
+        <pre class="example">data, string: result为true时为数据,false时为报错信息</pre></li>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example"><span class="keyword">local</span> result, data = ws:recv()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "ws:close"></a>
+    <strong  style="color: red;">
+    ws:close (code:, reason)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">关闭 websocket 与服务器的链接</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">code:</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example"> 1000 或 1002 等,请参考websocket标准</pre>
+        </li>
+        <li><span class="parameter">reason</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        <pre class="example">关闭原因</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">nil</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">ws:close()</pre></il>
+        <li><pre class="example">ws:close(<span class="number">1002</span>,<span class="string">"协议错误"</span>)</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "ws:state"></a>
+    <strong  style="color: red;">
+    ws:state ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取websocket当前状态</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">string: 状态值("CONNECTING","OPEN","CLOSING","CLOSED")</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">ws:state()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "ws:online"></a>
+    <strong  style="color: red;">
+    ws:online ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取websocket与服务器连接状态</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">boolean: true 连接成功,其他值连接失败</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">ws:online()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "ws:start"></a>
+    <strong  style="color: red;">
+    ws:start (<strong  style="color: green;">[keepAlive=nil]</strong><strong  style="color: green;">[, proc=nil]</strong>)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">websocket 需要在任务中启动,带自动重连,支持心跳协议</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">keepAlive</span>
+            <span class="types"><span class="type">number</span></span>
+         [<em>此参数可选，默认值为：</em> nil]
+        <pre class="example"> ,websocket心跳包，建议180秒</pre>
+        </li>
+        <li><span class="parameter">proc</span>
+            <span class="types"><span class="type">function</span></span>
+         [<em>此参数可选，默认值为：</em> nil]
+        <pre class="example"> 处理服务器下发消息的函数</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">nil</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">sys.taskInit(ws.start,ws,<span class="number">180</span>)</pre></il>
+        <li><pre class="example">sys.taskInit(ws.start,ws,<span class="number">180</span>,<span class="keyword">function</span>(msg)u1:send(msg) <span class="keyword">end</span>)</pre></il>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2021-08-02 13:53:19 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
+

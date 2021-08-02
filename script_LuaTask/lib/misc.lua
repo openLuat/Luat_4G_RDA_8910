@@ -9,9 +9,11 @@ local req = ril.request
 module(..., package.seeall)
 --sn：序列号
 --imei：IMEI
+--modeltype:模块型号，例如724，720，722等
 --calib: 校准标志
 --ant: 耦合测试标志位
-local sn, imei, calib, ver, muid, ant
+--temp:模块温度
+local sn, imei, calib, ver, muid, ant,modeltype,temp
 local setSnCbFnc,setImeiCbFnc,setClkCbFnc
 
 local function timeReport()
@@ -48,6 +50,18 @@ local function rsp(cmd, success, response, intermediate)
         imei = intermediate
         if setImeiCbFnc then setImeiCbFnc(true) end
         sys.publish('IMEI_READY_IND')
+    --查询模块温度
+    elseif cmd =="AT+RFTEMPERATURE?" then
+        temp = tonumber(string.match(intermediate, ':(.+)'))
+        if success then
+            sys.publish('MODEL_TEMPERATURE_READT_IND')
+        end
+    --查询模块型号
+    elseif cmd == 'AT+CGMM' then
+        modeltype = string.match(intermediate, '"(.+)"')
+        if success then
+            sys.publish('MODEL_NUMBER_READY_IND')
+        end
     elseif cmd == 'AT+VER' then
         ver = intermediate
     elseif prefix == '+CCLK' then
@@ -97,7 +111,9 @@ end
 --- 设置系统时间
 -- @table t,系统时间，格式参考：{year=2017,month=2,day=14,hour=14,min=2,sec=58}
 -- @function[opt=nil] cbFnc，设置结果回调函数，回调函数的调用形式为：
--- cnFnc(time，result)，result为true表示成功，false或者nil为失败；time表示设置之后的系统时间，table类型，例如{year=2017,month=2,day=14,hour=14,min=19,sec=23}
+--                           cbFnc(time，result)
+--                           result为true表示成功，false或者nil为失败
+--                           time表示设置之后的系统时间，table类型，例如{year=2017,month=2,day=14,hour=14,min=19,sec=23}
 -- @return nil
 -- @usage misc.setClock({year=2017,month=2,day=14,hour=14,min=2,sec=58})
 function setClock(t,cbFnc)
@@ -178,6 +194,24 @@ end
 function getImei()
     return imei or ""
 end
+--- 获取模块型号
+-- @return string,模块型号，如果未获取到返回""
+-- 例如：模块型号为724UG,则返回值为Air724UG;模块型号为722UG,则返回值为Air722UG;模块型号为820UG,则返回值为Air820UG
+-- 注意：开机lua脚本运行之后，会发送at命令去查询模块型号，所以需要一定时间才能获取到模块型号。开机后立即调用此接口，基本上返回""
+-- @usage modeltype = getModelType()
+function getModelType()
+    return modeltype or ""
+end
+
+-- 获取模块温度
+-- @return number,模块温度，如果未获取到返回""
+-- 例如：模块温度为29.77摄氏度,则返回值为29.77
+-- 注意：开机lua脚本运行之后，会发送at命令去查询模块型号，所以需要一定时间才能获取到模块温度。开机后立即调用此接口，基本上返回""
+function getTemperature()
+    ril.request("AT+RFTEMPERATURE?")
+    return temp or ""
+end
+
 --- 获取VBAT的电池电压
 -- @return number,电池电压,单位mv
 -- @usage vb = getVbatt()
@@ -242,6 +276,8 @@ end
 --注册以下AT命令的应答处理函数
 ril.regRsp("+WISN", rsp)
 ril.regRsp("+CGSN", rsp)
+ril.regRsp("+RFTEMPERATURE",rsp)
+ril.regRsp("+CGMM", rsp)
 ril.regRsp("+MUID", rsp)
 ril.regRsp("+WIMEI", rsp)
 ril.regRsp("+AMFAC", rsp)
@@ -254,4 +290,8 @@ req("AT+WISN?")
 req("AT+CGSN")
 req("AT+MUID?")
 req("AT*EXINFO?")
+--查询模块温度
+-- req("AT+RFTEMPERATURE?")
+--查询模块型号
+req("AT+CGMM")
 setTimeReport()

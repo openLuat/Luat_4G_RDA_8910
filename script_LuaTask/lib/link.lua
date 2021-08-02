@@ -120,7 +120,7 @@ local function procshut(curCmd, result,respdata, interdata)
 	end
 end
 --[[
-如果是默认承载，是去几激活不了的，
+如果是默认承载，是去激活不了的，
 如果是手动激活的pdp，去激活cid_manual后也还是有默认承载存在，
 所以如果上层在去激活后要发起socket是能连上的，所以这里直接上报IP_ERROR_IND，由上层自己管理shut之后的逻辑
 ]]

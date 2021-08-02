@@ -1,2 +1,2 @@
-Air820-中科微：适用于Air820UX系列、Air530Z模块
-other：适用于Air530以及市场上其他家的gps模块
+Air820：适用于Air820UX模块的demo
+Air模块外接GPS模块：适用于Air模块通过串口外挂单独的GPS模块的demo

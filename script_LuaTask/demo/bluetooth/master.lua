@@ -11,7 +11,10 @@ local function init()
     log.info("bt", "init")
     rtos.on(rtos.MSG_BLUETOOTH, function(msg)
         if msg.event == btcore.MSG_OPEN_CNF then
+	    log.info("bt", "ble open") --蓝牙打开成功
             sys.publish("BT_OPEN", msg.result) --蓝牙打开成功
+        elseif msg.event == btcore.MSG_CLOSE_CNF then
+            log.info("bt", "ble close") --蓝牙关闭成功
         elseif msg.event == btcore.MSG_BLE_CONNECT_CNF then
             sys.publish("BT_CONNECT_IND", {["handle"] = msg.handle, ["result"] = msg.result}) --蓝牙连接成功
         elseif msg.event == btcore.MSG_BLE_DISCONNECT_CNF then
@@ -33,6 +36,8 @@ local function init()
         elseif msg.event == btcore.MSG_BLE_FIND_CHARACTERISTIC_UUID_IND then
             uuid_c = msg.uuid
             log.info("bt", "find characteristic uuid",msg.uuid) --发现到服务内包含的特征uuid
+        elseif msg.event == btcore.MSG_BLE_READ_VALUE_IND then
+            log.info("bt", "read characteristic value",msg.data) --读特征value值
         end
     end)
 end
@@ -85,7 +90,7 @@ local function scan()
             if addr == bt_device.addr and bt_device.raw_data ~= adv_data then --接收到两包广播数据
                 scanrsp_data = bt_device.raw_data --响应包数据 根据蓝牙广播包协议解析
                 btcore.scan(0)  --停止扫描
-                btcore.connect(bt_device.addr)
+                btcore.connect(bt_device.addr,bt_device.addr_type)
                 log.info("bt.connect_name", name)
                 log.info("bt.connect_addr_type", addr_type)
                 log.info("bt.connect_addr", addr)

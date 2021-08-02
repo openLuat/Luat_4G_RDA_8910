@@ -14,9 +14,9 @@ local flashlist = {
 sys.taskInit(function()
     local spi_flash = spiFlash.setup(spi.SPI_1)
     while true do
-        local manufacutreID, deviceID = spi_flash:readFlashID()
-        print('spi flash id', manufacutreID, deviceID)
-        local flashName = (manufacutreID and deviceID) and flashlist[manufacutreID*256 + deviceID]
+        local manufactureID, deviceID = spi_flash:readFlashID()
+        print('spi flash id', manufactureID, deviceID)
+        local flashName = (manufactureID and deviceID) and flashlist[manufactureID*256 + deviceID]
         log.info('testSPIFlash', 'flash name', flashName or 'unknown')
         print('spi flash erase 4K', spi_flash:erase4K(0x1000))
         print('spi flash write', spi_flash:write(0x1000, '123456'))

@@ -77,7 +77,7 @@ end
 
 --- 创建基于TCP的socket对象
 -- @bool[opt=nil] ssl，是否为ssl连接，true表示是，其余表示否
--- @table[opt=nil] cert，ssl连接需要的证书配置，只有ssl参数为true时，才参数才有意义，cert格式如下：
+-- @table[opt=nil] cert，ssl连接需要的证书配置，只有ssl参数为true时，此参数才有意义，cert格式如下：
 -- {
 --     caCert = "ca.crt", --CA证书文件(Base64编码 X.509格式)，如果存在此参数，则表示客户端会对服务器的证书进行校验；不存在则不校验
 --     clientCert = "client.crt", --客户端证书文件(Base64编码 X.509格式)，服务器对客户端的证书进行校验时会用到此参数
@@ -108,7 +108,9 @@ end
 -- @number[opt=120] timeout 可选参数，连接超时时间，单位秒
 -- @return bool result true - 成功，false - 失败
 -- @return string ,id '0' -- '8' ,返回通道ID编号
--- @usage  c = socket.tcp(); c:connect();
+-- @usage  
+-- socketClient = socket.tcp()
+-- socketClient:connect("www.baidu.com","80")
 function mt:connect(address, port, timeout)
     assert(self.co == coroutine.running(), "socket:connect: coroutine mismatch")
     
@@ -188,10 +190,14 @@ function mt:connect(address, port, timeout)
     return true, self.id
 end
 
---- 异步收发选择器
--- @number keepAlive,服务器和客户端最大通信间隔时间,也叫心跳包最大时间,单位秒
--- @string pingreq,心跳包的字符串
+--- 异步发送数据
+-- @number[opt=nil] keepAlive,服务器和客户端最大通信间隔时间,也叫心跳包最大时间,单位秒
+-- @string[opt=nil] pingreq,心跳包的字符串
 -- @return boole,false 失败，true 表示成功
+-- @usage
+-- socketClient = socket.tcp()
+-- socketClient:connect("www.baidu.com","80")
+-- while socketClient:asyncSelect() do end
 function mt:asyncSelect(keepAlive, pingreq)
     assert(self.co == coroutine.running(), "socket:asyncSelect: coroutine mismatch")
     if self.error then
@@ -200,11 +206,13 @@ function mt:asyncSelect(keepAlive, pingreq)
     end
     
     self.wait = "SOCKET_SEND"
+    local dataLen = 0
     --log.info("socket.asyncSelect #self.output",#self.output)
     while #self.output ~= 0 do
         local data = table.concat(self.output)
+        dataLen = string.len(data)
         self.output = {}
-        for i = 1, string.len(data), SENDSIZE do
+        for i = 1, dataLen, SENDSIZE do
             -- 按最大MTU单元对data分包
             socketcore.sock_send(self.id, data:sub(i, i + SENDSIZE - 1))
             if self.timeout then
@@ -222,7 +230,8 @@ function mt:asyncSelect(keepAlive, pingreq)
         end
     end
     self.wait = "SOCKET_WAIT"
-    sys.publish("SOCKET_SEND", self.id)
+    --log.info("socket.asyncSelect",dataLen,self.id)
+    if dataLen>0 then sys.publish("SOCKET_SEND", self.id, true) end
     if keepAlive and keepAlive ~= 0 then
         if type(pingreq) == "function" then
             sys.timerStart(pingreq, keepAlive * 1000)
@@ -237,11 +246,14 @@ function mt:getAsyncSend()
     if self.error then return 0 end
     return #(self.output)
 end
---- 异步发送数据
+--- 异步缓存待发送的数据
 -- @string data 数据
 -- @number[opt=nil] timeout 可选参数，发送超时时间，单位秒；为nil时表示不支持timeout
 -- @return result true - 成功，false - 失败
--- @usage  c = socket.tcp(); c:connect(); c:asyncSend("12345678");
+-- @usage
+-- socketClient = socket.tcp()
+-- socketClient:connect("www.baidu.com","80")
+-- socketClient:asyncSend("12345678")
 function mt:asyncSend(data, timeout)
     if self.error then
         log.warn('socket.client:asyncSend', 'error', self.error)
@@ -254,10 +266,12 @@ function mt:asyncSend(data, timeout)
     return true
 end
 --- 异步接收数据
--- @return nil, 表示没有收到数据
--- @return data 如果是UDP协议，返回新的数据包,如果是TCP,返回所有收到的数据,没有数据返回长度为0的空串
--- @usage c = socket.tcp(); c:connect()
--- @usage data = c:asyncRecv()
+-- @return data 表示接收到的数据(如果是UDP，返回最新的一包数据；如果是TCP,返回所有收到的数据)
+--              ""表示未收到数据
+-- @usage 
+-- socketClient = socket.tcp()
+-- socketClient:connect("www.baidu.com","80")
+-- data = socketClient:asyncRecv()
 function mt:asyncRecv()
     if #self.input == 0 then return "" end
     if self.protocol == "UDP" then
@@ -265,18 +279,22 @@ function mt:asyncRecv()
     else
         local s = table.concat(self.input)
         self.input = {}
+        if self.isBlock then table.insert(self.input, socketcore.sock_recv(self.msg.socket_index, self.msg.recv_len)) end
         return s
     end
 end
 
---- 发送数据
+--- 同步发送数据
 -- @string data 数据
 --              此处传入的数据长度和剩余可用内存有关，只要内存够用，可以随便传入数据
 --              虽然说此处的数据长度没有特别限制，但是调用core中的socket发送接口时，每次最多发送11200字节的数据
 --              例如此处传入的data长度是112000字节，则在这个send接口中，会循环10次，每次发送11200字节的数据
 -- @number[opt=120] timeout 可选参数，发送超时时间，单位秒
 -- @return result true - 成功，false - 失败
--- @usage  c = socket.tcp(); c:connect(); c:send("12345678");
+-- @usage
+-- socketClient = socket.tcp()
+-- socketClient:connect("www.baidu.com","80")
+-- socketClient:send("12345678")
 function mt:send(data, timeout)
     assert(self.co == coroutine.running(), "socket:send: coroutine mismatch")
     if self.error then
@@ -300,16 +318,26 @@ function mt:send(data, timeout)
     return true
 end
 
---- 接收数据
+--- 同步接收数据
 -- @number[opt=0] timeout 可选参数，接收超时时间，单位毫秒
 -- @string[opt=nil] msg 可选参数，控制socket所在的线程退出recv阻塞状态
--- @bool[opt=nil] msgNoResume 可选参数，控制socket所在的线程退出recv阻塞状态，false或者nil表示“在recv阻塞状态，收到msg消息，可以退出阻塞状态”，true表示不退出
--- @return result 数据接收结果，true表示成功，false表示失败
--- @return data 如果成功的话，返回接收到的数据；超时时返回错误为"timeout"；msg控制退出时返回msg的字符串
--- @return param 如果是msg返回的false，则data的值是msg，param的值是msg的参数
--- @usage c = socket.tcp(); c:connect()
--- @usage result, data = c:recv()
--- @usage false,msg,param = c:recv(60000,"publish_msg")
+-- @bool[opt=nil] msgNoResume 可选参数，控制socket所在的线程退出recv阻塞状态
+--                false或者nil表示“在recv阻塞状态，收到msg消息，可以退出阻塞状态”，true表示不退出
+--                此参数仅lib内部使用，应用脚本不要使用此参数
+-- @return result 数据接收结果
+--                true表示成功（接收到了数据）
+--                false表示失败（没有接收到数据）
+-- @return data 
+--                如果result为true，data表示接收到的数据(如果是UDP，返回最新的一包数据；如果是TCP,返回所有收到的数据)
+--                如果result为false，超时失败，data为"timeout"
+--                如果result为false，msg控制退出，data为msg的字符串
+--                如果result为false，socket连接被动断开控制退出，data为"CLOSED"
+--                如果result为false，PDP断开连接控制退出，data为"IP_ERROR_IND"
+-- @return param 如果是msg控制退出，param的值是msg的参数
+-- @usage 
+-- socketClient = socket.tcp()
+-- socketClient:connect("www.baidu.com","80")
+-- result,data = socketClient:recv(60000,"APP_SOCKET_SEND_DATA")
 function mt:recv(timeout, msg, msgNoResume)
     assert(self.co == coroutine.running(), "socket:recv: coroutine mismatch")
     if self.error then
@@ -355,7 +383,8 @@ function mt:recv(timeout, msg, msgNoResume)
     end
     
     if self.protocol == "UDP" then
-        return true, table.remove(self.input)
+        local s = table.remove(self.input)
+        return true, s
     else
         log.warn("-------------------使用缓冲区---------------")
         local s = table.concat(self.input)
@@ -365,9 +394,12 @@ function mt:recv(timeout, msg, msgNoResume)
     end
 end
 
---- 销毁一个socket
+--- 主动关闭并且销毁一个socket
 -- @return nil
--- @usage  c = socket.tcp(); c:connect(); c:send("123"); c:close()
+-- @usage
+-- socketClient = socket.tcp()
+-- socketClient:connect("www.baidu.com","80")
+-- socketClient:close()
 function mt:close()
     assert(self.co == coroutine.running(), "socket:close: coroutine mismatch")
     if self.iSubscribe then
@@ -393,6 +425,9 @@ function mt:close()
             socketsConnected = socketsConnected-1
         end
         sys.publish("SOCKET_ACTIVE", socketsConnected>0)
+    end
+    if self.input then
+        self.input = {}
     end
     --end
     if self.id ~= nil then
@@ -526,6 +561,16 @@ function printStatus()
     end
 end
 
+--- 设置数据传输后，允许进入休眠状态的延时时长
+-- 3024版本以及之后的版本才支持此功能
+-- 此功能设置的参数，设置成功后，掉电会自动保存
+-- @number tm，数据传输后，允许进入休眠状态的延时时长，单位为秒，取值范围1到20
+--             注意：此时间越短，允许进入休眠状态越快，功耗越低；但是在某些网络环境中，此时间越短，可能会造成数据传输不稳定
+--                   建议在可以接受的功耗范围内，此值设置的越大越好
+--                   如果没有设置此参数，此延时时长是和基站的配置有关，一般来说是10秒左右
+-- @return nil
+-- @usage
+-- socket.setLowPower(5)
 function setLowPower(tm)
     ril.request("AT*RTIME="..tm)
 end

@@ -22,6 +22,8 @@ require "color_lcd_spi_st7735"
 --require "color_lcd_spi_gc9106l"
 --require "color_lcd_spi_gc9a01"
 --require "mono_i2c_ssd1306"
+--require "mipi_lcd_ILI9806E"
+
 module(..., package.seeall)
 
 --LCD分辨率的宽度和高度(单位是像素)

@@ -155,3 +155,13 @@ if disp and disp.sleep then
         pm.sleep("lib.patch.disp.sleep")
     end
 end
+
+if io and io.mount then
+    oldIoMount = io.mount
+    io.mount = function (...)
+        pm.wake("lib.patch.io.mount")
+        local result = oldIoMount(...)
+        pm.sleep("lib.patch.io.mount")
+        return result
+    end
+end

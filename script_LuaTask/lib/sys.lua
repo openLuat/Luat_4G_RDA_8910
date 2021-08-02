@@ -10,7 +10,7 @@ require "patch"
 module(..., package.seeall)
 
 -- lib脚本版本号，只要lib中的任何一个脚本做了修改，都需要更新此版本号
-SCRIPT_LIB_VER = "2.3.8"
+SCRIPT_LIB_VER = "2.4.0"
 
 -- TaskID最大值
 local TASK_TIMER_ID_MAX = 0x1FFFFFFF
@@ -275,7 +275,7 @@ function timerStart(fnc, ms, ...)
     else
         timerStop(fnc, ...)
     end
-    -- 为定时器申请ID，ID值 1-20 留给任务，20-30留给消息专用定时器
+    -- 为定时器申请ID，ID值 1-0X1FFFFFFF 留给任务，0X1FFFFFFF-0x7FFFFFFF留给消息专用定时器
     while true do
         if msgId >= MSG_TIMER_ID_MAX then msgId = TASK_TIMER_ID_MAX end
         msgId = msgId + 1
@@ -469,7 +469,7 @@ function run()
         local msg, param = rtos.receive(rtos.INF_TIMEOUT)
         -- 判断是否为定时器消息，并且消息是否注册
         if msg == rtos.MSG_TIMER and timerPool[param] then
-            if param < TASK_TIMER_ID_MAX then
+            if param <= TASK_TIMER_ID_MAX then
                 local taskId = timerPool[param]
                 timerPool[param] = nil
                 if taskTimerPool[taskId] == param then

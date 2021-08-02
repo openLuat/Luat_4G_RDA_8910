@@ -16,7 +16,6 @@ require"utils"
 module(..., package.seeall)
 
 local smatch,sfind,slen,ssub,sbyte,sformat,srep = string.match,string.find,string.len,string.sub,string.byte,string.format,string.rep
-
 --GPS开启标志，true表示开启状态，false或者nil表示关闭状态
 local openFlag
 --GPS定位标志，"2D"表示2D定位，"3D"表示3D定位，其余表示未定位
@@ -73,6 +72,9 @@ local runMode = 0
 local taskFlag=false
 --runMode为1或者2时，GPS运行状态和休眠状态的时长
 local runTime,sleepTime
+
+--检测gps是否工作正常的定时器ID
+local workAbnormalTimerId
 
 --[[
 函数名：getstrength
@@ -139,6 +141,13 @@ local function filterTimerFnc()
     filteredFlag = true
 end
 
+local function stopWorkAbnormalTimer()
+    if workAbnormalTimerId then
+        sys.timerStop(workAbnormalTimerId)
+        workAbnormalTimerId = nil
+    end
+end
+
 local function parseNmea(s)
     if not s or s=="" then return end
     local lat,lng,spd,cog,gpsFind,gpsTime,gpsDate,locSateCnt,hdp,latTyp,lngTyp,altd
@@ -146,14 +155,15 @@ local function parseNmea(s)
     local hexStr = s:toHex()
     if "AAF00C0001009500039B0D0A"==hexStr then
         sys.publish("GPS_STATE","BINARY_CMD_ACK")
+        stopWorkAbnormalTimer()
         return
     elseif smatch(hexStr,"^AAF00C000300") then
         sys.publish("GPS_STATE",smatch(hexStr,"^AAF00C000300FFFF") and "WRITE_EPH_END_ACK" or "WRITE_EPH_ACK")
+        stopWorkAbnormalTimer()
         return
     end
 
-    local fixed
-
+    local fixed,workAbnormal
     if smatch(s,"GGA") then
         lat,latTyp,lng,lngTyp,gpsFind,locSateCnt,hdp,altd,sep = smatch(s,"GGA,%d+%.%d+,(%d+%.%d+),([NS]),(%d+%.%d+),([EW]),(%d),(%d+),([%d%.]*),(.*),M,(.*),M")
         if (gpsFind=="1" or gpsFind=="2" or gpsFind=="4") and altd then
@@ -193,6 +203,12 @@ local function parseNmea(s)
                 SateSn = satesn
             end
         end
+    else
+        workAbnormal = true
+    end
+    
+    if not workAbnormal then
+        stopWorkAbnormalTimer()
     end
     
     if filterSeconds>0 and fixed and not fixFlag and not filteredFlag then
@@ -298,6 +314,7 @@ local function _open()
         rtos.sys32k_clk_out(1)
     end
     openFlag = true
+    workAbnormalTimerId = sys.timerStart(sys.publish,8000,"GPS_WORK_ABNORMAL_IND")
     sys.publish("GPS_STATE","OPEN")
     fixFlag,filteredFlag = false
     Ggalng,Ggalat,Gsv,Sep = "","",""    
@@ -315,7 +332,8 @@ local function _close()
     uart.close(uartID)
     pm.sleep("gps.lua")
     openFlag = false
-    sys.publish("GPS_STATE","CLOSE",fixFlag)
+    sys.publish("GPS_STATE","CLOSE",fixFlag)    
+    stopWorkAbnormalTimer()
     fixFlag,filteredFlag = false
     sys.timerStop(filterTimerFnc)
     Ggalng,Ggalat,Gsv,Sep = "","",""
@@ -870,4 +888,14 @@ function setParseItem(utcTime,gsv,gsaId)
     psUtcTime,psGsv,psSn = utcTime,gsv,gsaId
 end
 
-sys.subscribe("GPS_STATE",statInd)
+
+function init()
+    sys.subscribe("GPS_STATE",statInd)
+end
+
+function unInit()
+    sys.unsubscribe("GPS_STATE",statInd)
+    closeAll()
+end
+
+init()

@@ -568,8 +568,13 @@ function getCellInfo()
 	return ret
 end
 
---- 获取当前和临近位置区、小区、mcc、mnc、以及信号强度的拼接字符串
--- @return string cellInfo,当前和临近位置区、小区、mcc、mnc、以及信号强度的拼接字符串，例如："460.01.6311.49234.30;460.01.6311.49233.23;460.02.6322.49232.18;"
+--- 获取当前和临近位置区、小区、mcc、mnc、以及信号的拼接字符串
+-- @bool[opt=nil] rssi，信号是否拼接功率，true表示功率，false或者nil表示强度
+--                      表示强度时，信号的取值范围是0到31
+--                      表示功率时，信号的计算公式为 强度*2-113，取值范围为-113dB到-51dB
+-- @return string cellInfo,当前和临近位置区、小区、mcc、mnc、以及信号的拼接字符串，例如：
+--                      当rssi参数为true时，"460.01.6311.49234.-73;460.01.6311.49233.-67;460.02.6322.49232.-77;"
+--                      当rssi参数为false或者nil时，"460.01.6311.49234.30;460.01.6311.49233.23;460.02.6322.49232.18;"
 -- @usage net.getCellInfoExt()
 function getCellInfoExt(rssi)
 	local i, ret = 1, ""

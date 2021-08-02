@@ -31,6 +31,8 @@ local publish = sys.publish
 local ccready = false
 --通话列表
 local call_list = {n= 0}
+--通话断开原因
+local discReason
 
 --- 是否存在通话
 -- @return bool result 存在通话返回true，否则返回false
@@ -177,12 +179,22 @@ local function ccurc(data, prefix)
     elseif prefix == "+DTMFDET" then
         parsedtmfnum(data)
     else
+        if data=="NO CARRIER" or data=="NO ANSWER" or data=="BUSY" then
+            discReason = data
+        end
+        
         req('AT+CLCC')
         if data == "CONNECT" and audio and type(audio.stop)=="function" then audio.stop() end --先停止音频播放
     end
 end
 
-local function ccrsp() req('AT+CLCC') end
+local function ccrsp(cmd, success, response, intermediate)
+    if cmd=="AT+CHUP" then
+        discReason = "CHUP"
+    end
+    
+    req('AT+CLCC')
+end
 
 --注册以下通知的处理函数
 ril.regUrc("CALL READY", ccurc)
@@ -220,7 +232,8 @@ ril.regRsp("+CLCC", function(cmd, success, response, intermediate)
         end
         call_list = new
         if new.n == 0 then
-            publish('CALL_DISCONNECTED')
+            publish('CALL_DISCONNECTED',discReason)
+            discReason = nil
             pm.sleep('cc')
         end
     end

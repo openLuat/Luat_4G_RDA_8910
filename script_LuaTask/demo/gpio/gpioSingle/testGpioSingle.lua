@@ -73,6 +73,42 @@ end
 getGpio13Fnc = pins.setup(pio.P0_13,gpio13IntFnc)
 
 
+---------------------------------------脉冲统计个数功能演示---------------------------------------
+--脉冲产生器：GPIO11一直输出1KHz的方波
+pio.pin.pwm(pio.P0_11,500,500,-1)
+
+
+--脉冲检测：GPIO23用来检测，短接GPIO11和GPIO23
+sys.taskInit(function()
+    --关闭软件和硬件防抖功能
+    pio.pin.setdebounce(0xffffffff)
+    --配置GPIO23位脉冲检测模式
+    pio.pin.setdir(pio.INT,pio.P0_23,pio.CONT)
+    --恢复默认防抖配置20毫秒
+    pio.pin.setdebounce(20)
+    
+    --每隔一秒检测一次输入脉冲的数量
+    --检测1分钟
+    local seconds = 0
+    while seconds<60 do
+        -- 读取检测到的脉冲个数，数据为table类型，格式如下：
+        -- {
+        --     low = 10, -- 低电平个数
+        --     high = 10, -- 高电平个数
+        --     duration = 2000000, -- 距离上次读取的时间（单位us）
+        -- }
+        local tPlusInfo = pio.pin.getval(pio.P0_23)
+        log.info("testGpioSingle.gpio23 tPlusInfo",tPlusInfo.low,tPlusInfo.high,tPlusInfo.duration)
+        sys.wait(1000)
+        seconds = seconds+1
+    end
+    
+    --关闭GPIO23脉冲检测功能
+    pio.pin.close(pio.P0_23)
+end)
+---------------------------------------脉冲统计个数功能演示---------------------------------------
+
+
 --[[
 pmd.ldoset(1,pmd.LDO_VMMC)
 

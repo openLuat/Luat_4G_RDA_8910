@@ -248,7 +248,9 @@ end
 --          [3] = "string2"
 --      }
 --      例如上面的这个body，索引必须为连续的数字(从1开始)，实际传输时，先发送字符串"string1"，再发送文件/ldata/test.jpg经过base64编码后的内容，最后发送字符串"string2"
--- @number[opt=30000] timeout，请求发送成功后，接收服务器返回应答数据的超时时间，单位毫秒，默认为30秒
+-- @number[opt=30000] timeout，http请求应答整个过程中，每个子过程的超时时间，单位毫秒，默认为30秒，子过程包括如下两种：
+--                             1、pdp数据网络激活的超时时间
+--                             2、http请求发送成功后，分段接收服务器的应答数据，每段数据接收的超时时间
 -- @function[opt=nil] cbFnc，执行HTTP请求的回调函数(请求发送结果以及应答数据接收结果都通过此函数通知用户)，回调函数的调用形式为：
 --      cbFnc(result,prompt,head,body)
 --      result：true或者false，true表示成功收到了服务器的应答，false表示请求发送失败或者接收服务器应答失败

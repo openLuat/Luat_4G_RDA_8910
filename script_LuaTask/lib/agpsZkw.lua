@@ -145,26 +145,7 @@ function isgetloc()
 end
 ]]
 
-
-sys.subscribe("GPS_STATE", function(evt,para)
-    log.info("agpsZkw.GPS_STATE",evt,para)
-    if evt=="LOCATION_SUCCESS" or (evt=="CLOSE" and para==true) then
-        runTimer()
-    elseif evt=="OPEN" then
---[[
-        local lng,lat = gps.getLastLocation()
-        if lng=="" or lat=="" then
-            lng,lat = lastLbsLng,lastLbsLat
-        end
-        if lng~="" and lat~="" then
-            gps.open(gps.TIMERORSUC,{tag="lib.agpsZkw.lua.fastFix",val=4})
-            local tm = os.date("*t")
-            sys.timerStart(gps.setFastFix,2000,lat,lng,common.timeZoneConvert(tm.year,tm.month,tm.day,tm.hour,tm.min,tm.sec,8,0))
-        end]]
-    end
-end)
-
-sys.subscribe("IP_READY_IND", function()
+local function ipReady()
     if gps.isFix() then
         runTimer()
     else
@@ -180,4 +161,37 @@ sys.subscribe("IP_READY_IND", function()
             sys.timerStart(upd_xingli,3000)
         end
     end
-end)
+end
+
+local function gpsState(evt,para)
+    log.info("agpsZkw.GPS_STATE",evt,para)
+    if evt=="LOCATION_SUCCESS" or (evt=="CLOSE" and para==true) then
+        runTimer()
+    elseif evt=="OPEN" then
+--[[
+        local lng,lat = gps.getLastLocation()
+        if lng=="" or lat=="" then
+            lng,lat = lastLbsLng,lastLbsLat
+        end
+        if lng~="" and lat~="" then
+            gps.open(gps.TIMERORSUC,{tag="lib.agpsZkw.lua.fastFix",val=4})
+            local tm = os.date("*t")
+            sys.timerStart(gps.setFastFix,2000,lat,lng,common.timeZoneConvert(tm.year,tm.month,tm.day,tm.hour,tm.min,tm.sec,8,0))
+        end]]
+    end
+end
+
+function init()
+    sys.subscribe("GPS_STATE",gpsState)
+    sys.subscribe("IP_READY_IND",ipReady)
+    log.info("agpsZkw.unInit")
+end
+
+
+function unInit()
+    sys.unsubscribe("GPS_STATE",gpsState)
+    sys.unsubscribe("IP_READY_IND",ipReady)
+    log.info("agpsZkw.unInit")
+end
+
+init()

@@ -16,7 +16,10 @@ local function init()
     log.info("bt", "init")
     rtos.on(rtos.MSG_BLUETOOTH, function(msg)
         if msg.event == btcore.MSG_OPEN_CNF then
+            log.info("bt", "ble open") --蓝牙打开成功
             sys.publish("BT_OPEN", msg.result) --蓝牙打开成功
+        elseif msg.event == btcore.MSG_CLOSE_CNF then
+            log.info("bt", "ble close") --蓝牙关闭成功
         elseif msg.event == btcore.MSG_BLE_CONNECT_IND then
             sys.publish("BT_CONNECT_IND", {["handle"] = msg.handle, ["result"] = msg.result}) --蓝牙连接成功
 		elseif msg.event == btcore.MSG_BLE_DISCONNECT_IND then
@@ -53,16 +56,17 @@ end
 local function advertising()
     --local struct1 = {{0xfee1, 0x08, 0x0002},
     --    {0xfee2, 0x10,0x0001, {{0x2902,0x0001},{0x2901,"123456"}}}}--{特征uuid,特征属性,特征权限,{特征描述uuid,描述属性}}
-    --local struct2 = {{"9ecadc240ee5a9e093f3a3b50300406e",0x10,0x0001,{{0x2902,0x0001}}},
-    --              {"9ecadc240ee5a9e093f3a3b50200406e",0x0c, 0x0002}}
+    --local struct2 = {{"9ecadc240ee5a9e093f3a3b50200406e",0x10,0x0001,{{0x2902,0x0001}}},
+    --              {"9ecadc240ee5a9e093f3a3b50300406e",0x0c, 0x0002}}
 
     log.info("bt", "advertising")
     btcore.setname("Luat_Air724UG")-- 设置广播名称
-    --btcore.setadvdata(string.fromHex("02010604ff000203"))-- 设置广播数据 根据蓝牙广播包协议
+    btcore.setadvdata(string.fromHex("02010604ff000203"))-- 设置广播数据 根据蓝牙广播包协议
     --btcore.setscanrspdata(string.fromHex("04ff000203"))-- 设置广播数据 根据蓝牙广播包协议
     --service(0xfee0, struct1)--添加服务16bit uuid   自定义服务
     --service("9ecadc240ee5a9e093f3a3b50100406e",struct2)--添加服务128bit uuid   自定义服务
-	--btcore.setadvparam(0x80,0xa0,0,0,0x07,0,0,"11:22:33:44:55:66") --广播参数设置 (最小广播间隔,最大广播间隔,广播类型,广播本地地址类型,广播channel map,广播过滤策略,定向地址类型,定向地址)
+    --btcore.addwhitelist("11:22:33:44:55:66",0)
+	--btcore.setadvparam(0x80,0xa0,0,0,0x07,2,0,"11:22:33:44:55:66") --广播参数设置 (最小广播间隔,最大广播间隔,广播类型,广播本地地址类型,广播channel map,广播过滤策略,定向地址类型,定向地址)
     btcore.advertising(1)-- 打开广播
 end
 
@@ -75,7 +79,6 @@ local function data_trans()
     end
     --链接成功
     log.info("bt.connect_handle",bt_connect.handle) --连接句柄
-    sys.wait(1000)
     log.info("bt.send", "Hello I'm Luat BLE")
     while true do
         _, bt_recv = sys.waitUntil("BT_DATA_IND") --等待接收到数据
@@ -100,6 +103,7 @@ local function data_trans()
                 if btWifiTdmTest then return end
             end
             btcore.send(data, 0xfee2, bt_connect.handle)--发送数据(数据 对应特征uuid 连接句柄)
+            --btcore.send(data, "9ecadc240ee5a9e093f3a3b50200406e", bt_connect.handle)--发送数据(数据 对应特征uuid 连接句柄)
         end
     end
 end

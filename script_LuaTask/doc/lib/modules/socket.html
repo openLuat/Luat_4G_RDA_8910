@@ -42,6 +42,7 @@
   <li><a href="../modules/aLiYun.html">aLiYun</a></li>
   <li><a href="../modules/aLiYunOta.html">aLiYunOta</a></li>
   <li><a href="../modules/agps.html">agps</a></li>
+  <li><a href="../modules/agpsHxxt.html">agpsHxxt</a></li>
   <li><a href="../modules/agpsZkw.html">agpsZkw</a></li>
   <li><a href="../modules/audio.html">audio</a></li>
   <li><a href="../modules/cc.html">cc</a></li>
@@ -51,6 +52,7 @@
   <li><a href="../modules/errDump.html">errDump</a></li>
   <li><a href="../modules/ftp.html">ftp</a></li>
   <li><a href="../modules/gps.html">gps</a></li>
+  <li><a href="../modules/gpsHxxt.html">gpsHxxt</a></li>
   <li><a href="../modules/gpsZkw.html">gpsZkw</a></li>
   <li><a href="../modules/http.html">http</a></li>
   <li><a href="../modules/lbsLoc.html">lbsLoc</a></li>
@@ -78,6 +80,7 @@
   <li><a href="../modules/uiWin.html">uiWin</a></li>
   <li><a href="../modules/update.html">update</a></li>
   <li><a href="../modules/utils.html">utils</a></li>
+  <li><a href="../modules/websocket.html">websocket</a></li>
   <li><a href="../modules/wifiScan.html">wifiScan</a></li>
 </ul>
 
@@ -119,15 +122,15 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mt:asyncSelect">
-    mt:asyncSelect (keepAlive, pingreq)
+    mt:asyncSelect (<strong  style="color: gray;">[keepAlive=nil]</strong><strong  style="color: gray;">[, pingreq=nil]</strong>)
     </a></td>
-	<td class="summary">异步收发选择器</td>
+	<td class="summary">异步发送数据</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mt:asyncSend">
     mt:asyncSend (data<strong  style="color: gray;">[, timeout=nil]</strong>)
     </a></td>
-	<td class="summary">异步发送数据</td>
+	<td class="summary">异步缓存待发送的数据</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mt:asyncRecv">
@@ -139,19 +142,19 @@
 	<td class="name" nowrap><a href="#mt:send">
     mt:send (data<strong  style="color: gray;">[, timeout=120]</strong>)
     </a></td>
-	<td class="summary">发送数据</td>
+	<td class="summary">同步发送数据</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mt:recv">
     mt:recv (<strong  style="color: gray;">[timeout=0]</strong><strong  style="color: gray;">[, msg=nil]</strong><strong  style="color: gray;">[, msgNoResume=nil]</strong>)
     </a></td>
-	<td class="summary">接收数据</td>
+	<td class="summary">同步接收数据</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#mt:close">
     mt:close ()
     </a></td>
-	<td class="summary">销毁一个socket</td>
+	<td class="summary">主动关闭并且销毁一个socket</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#setTcpResendPara">
@@ -171,6 +174,14 @@
     printStatus ()
     </a></td>
 	<td class="summary">打印所有socket的状态</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#setLowPower">
+    setLowPower (tm)
+    </a></td>
+	<td class="summary">设置数据传输后，允许进入休眠状态的延时时长
+ 3024版本以及之后的版本才支持此功能
+ 此功能设置的参数，设置成功后，掉电会自动保存</td>
 	</tr>
 </table>
 <h2><a href="#Fields">Fields</a></h2>
@@ -210,7 +221,7 @@
         <li><span class="parameter">cert</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
          [<em>此参数可选，默认值为：</em> nil]
-        <pre class="example">ssl连接需要的证书配置，只有ssl参数为true时，才参数才有意义，cert格式如下：
+        <pre class="example">ssl连接需要的证书配置，只有ssl参数为true时，此参数才有意义，cert格式如下：
  {
      caCert = "ca.crt", --CA证书文件(Base64编码 X.509格式)，如果存在此参数，则表示客户端会对服务器的证书进行校验；不存在则不校验
      clientCert = "client.crt", --客户端证书文件(Base64编码 X.509格式)，服务器对客户端的证书进行校验时会用到此参数
@@ -301,28 +312,31 @@ c = socket.tcp(<span class="keyword">true</span>, {caCert=<span class="string">"
 
     <h3>Usage:</h3>
     <ul>
-        <li><pre class="example">c = socket.tcp(); c:connect();</pre></il>
+        <li><pre class="example">socketClient = socket.tcp()
+socketClient:connect(<span class="string">"www.baidu.com"</span>,<span class="string">"80"</span>)</pre></il>
     </ul>
 
 </dd>
     <dt>
     <a name = "mt:asyncSelect"></a>
     <strong  style="color: red;">
-    mt:asyncSelect (keepAlive, pingreq)
+    mt:asyncSelect (<strong  style="color: green;">[keepAlive=nil]</strong><strong  style="color: green;">[, pingreq=nil]</strong>)
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">异步收发选择器</pre>
+    <pre class="example"  style="color: red;">异步发送数据</pre>
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">keepAlive</span>
             <span class="types"><span class="type">number</span></span>
+         [<em>此参数可选，默认值为：</em> nil]
         <pre class="example">服务器和客户端最大通信间隔时间,也叫心跳包最大时间,单位秒</pre>
         </li>
         <li><span class="parameter">pingreq</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         [<em>此参数可选，默认值为：</em> nil]
         <pre class="example">心跳包的字符串</pre>
         </li>
     </ul>
@@ -335,6 +349,12 @@ c = socket.tcp(<span class="keyword">true</span>, {caCert=<span class="string">"
 
 
 
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">socketClient = socket.tcp()
+socketClient:connect(<span class="string">"www.baidu.com"</span>,<span class="string">"80"</span>)
+<span class="keyword">while</span> socketClient:asyncSelect() <span class="keyword">do</span> <span class="keyword">end</span></pre></il>
+    </ul>
 
 </dd>
     <dt>
@@ -344,7 +364,7 @@ c = socket.tcp(<span class="keyword">true</span>, {caCert=<span class="string">"
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">异步发送数据</pre>
+    <pre class="example"  style="color: red;">异步缓存待发送的数据</pre>
 
 
     <h3>Parameters:</h3>
@@ -370,7 +390,9 @@ c = socket.tcp(<span class="keyword">true</span>, {caCert=<span class="string">"
 
     <h3>Usage:</h3>
     <ul>
-        <li><pre class="example">c = socket.tcp(); c:connect(); c:asyncSend(<span class="string">"12345678"</span>);</pre></il>
+        <li><pre class="example">socketClient = socket.tcp()
+socketClient:connect(<span class="string">"www.baidu.com"</span>,<span class="string">"80"</span>)
+socketClient:asyncSend(<span class="string">"12345678"</span>)</pre></il>
     </ul>
 
 </dd>
@@ -386,19 +408,19 @@ c = socket.tcp(<span class="keyword">true</span>, {caCert=<span class="string">"
 
 
     <h3>Returns:</h3>
-    <ol>
+    <ul>
         <li>
-        <pre class="example">nil, 表示没有收到数据</pre></li>
-        <li>
-        <pre class="example">data 如果是UDP协议，返回新的数据包,如果是TCP,返回所有收到的数据,没有数据返回长度为0的空串</pre></li>
-    </ol>
+        <pre class="example">data 表示接收到的数据(如果是UDP，返回最新的一包数据；如果是TCP,返回所有收到的数据)
+              ""表示未收到数据</pre></il>
+    </ul>
 
 
 
     <h3>Usage:</h3>
     <ul>
-        <li><pre class="example">c = socket.tcp(); c:connect()</pre></il>
-        <li><pre class="example">data = c:asyncRecv()</pre></il>
+        <li><pre class="example">socketClient = socket.tcp()
+socketClient:connect(<span class="string">"www.baidu.com"</span>,<span class="string">"80"</span>)
+data = socketClient:asyncRecv()</pre></il>
     </ul>
 
 </dd>
@@ -409,7 +431,7 @@ c = socket.tcp(<span class="keyword">true</span>, {caCert=<span class="string">"
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">发送数据</pre>
+    <pre class="example"  style="color: red;">同步发送数据</pre>
 
 
     <h3>Parameters:</h3>
@@ -438,7 +460,9 @@ c = socket.tcp(<span class="keyword">true</span>, {caCert=<span class="string">"
 
     <h3>Usage:</h3>
     <ul>
-        <li><pre class="example">c = socket.tcp(); c:connect(); c:send(<span class="string">"12345678"</span>);</pre></il>
+        <li><pre class="example">socketClient = socket.tcp()
+socketClient:connect(<span class="string">"www.baidu.com"</span>,<span class="string">"80"</span>)
+socketClient:send(<span class="string">"12345678"</span>)</pre></il>
     </ul>
 
 </dd>
@@ -449,7 +473,7 @@ c = socket.tcp(<span class="keyword">true</span>, {caCert=<span class="string">"
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">接收数据</pre>
+    <pre class="example"  style="color: red;">同步接收数据</pre>
 
 
     <h3>Parameters:</h3>
@@ -467,27 +491,36 @@ c = socket.tcp(<span class="keyword">true</span>, {caCert=<span class="string">"
         <li><span class="parameter">msgNoResume</span>
             <span class="types"><span class="type">bool</span></span>
          [<em>此参数可选，默认值为：</em> nil]
-        <pre class="example"> 可选参数，控制socket所在的线程退出recv阻塞状态，false或者nil表示“在recv阻塞状态，收到msg消息，可以退出阻塞状态”，true表示不退出</pre>
+        <pre class="example"> 可选参数，控制socket所在的线程退出recv阻塞状态
+                false或者nil表示“在recv阻塞状态，收到msg消息，可以退出阻塞状态”，true表示不退出
+                此参数仅lib内部使用，应用脚本不要使用此参数</pre>
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
         <li>
-        <pre class="example">result 数据接收结果，true表示成功，false表示失败</pre></li>
+        <pre class="example"> result 数据接收结果
+                true表示成功（接收到了数据）
+                false表示失败（没有接收到数据）</pre></li>
         <li>
-        <pre class="example">data 如果成功的话，返回接收到的数据；超时时返回错误为"timeout"；msg控制退出时返回msg的字符串</pre></li>
+        <pre class="example"> data
+                如果result为true，data表示接收到的数据(如果是UDP，返回最新的一包数据；如果是TCP,返回所有收到的数据)
+                如果result为false，超时失败，data为"timeout"
+                如果result为false，msg控制退出，data为msg的字符串
+                如果result为false，socket连接被动断开控制退出，data为"CLOSED"
+                如果result为false，PDP断开连接控制退出，data为"IP_ERROR_IND"</pre></li>
         <li>
-        <pre class="example">param 如果是msg返回的false，则data的值是msg，param的值是msg的参数</pre></li>
+        <pre class="example">param 如果是msg控制退出，param的值是msg的参数</pre></li>
     </ol>
 
 
 
     <h3>Usage:</h3>
     <ul>
-        <li><pre class="example">c = socket.tcp(); c:connect()</pre></il>
-        <li><pre class="example">result, data = c:recv()</pre></il>
-        <li><pre class="example"><span class="keyword">false</span>,msg,param = c:recv(<span class="number">60000</span>,<span class="string">"publish_msg"</span>)</pre></il>
+        <li><pre class="example">socketClient = socket.tcp()
+socketClient:connect(<span class="string">"www.baidu.com"</span>,<span class="string">"80"</span>)
+result,data = socketClient:recv(<span class="number">60000</span>,<span class="string">"APP_SOCKET_SEND_DATA"</span>)</pre></il>
     </ul>
 
 </dd>
@@ -498,7 +531,7 @@ c = socket.tcp(<span class="keyword">true</span>, {caCert=<span class="string">"
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">销毁一个socket</pre>
+    <pre class="example"  style="color: red;">主动关闭并且销毁一个socket</pre>
 
 
 
@@ -512,7 +545,9 @@ c = socket.tcp(<span class="keyword">true</span>, {caCert=<span class="string">"
 
     <h3>Usage:</h3>
     <ul>
-        <li><pre class="example">c = socket.tcp(); c:connect(); c:send(<span class="string">"123"</span>); c:close()</pre></il>
+        <li><pre class="example">socketClient = socket.tcp()
+socketClient:connect(<span class="string">"www.baidu.com"</span>,<span class="string">"80"</span>)
+socketClient:close()</pre></il>
     </ul>
 
 </dd>
@@ -626,6 +661,43 @@ setTcpResendPara(<span class="number">4</span>,<span class="number">16</span>)</
     </ul>
 
 </dd>
+    <dt>
+    <a name = "setLowPower"></a>
+    <strong  style="color: red;">
+    setLowPower (tm)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">设置数据传输后，允许进入休眠状态的延时时长
+ 3024版本以及之后的版本才支持此功能
+ 此功能设置的参数，设置成功后，掉电会自动保存</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">tm</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">数据传输后，允许进入休眠状态的延时时长，单位为秒，取值范围1到20
+             注意：此时间越短，允许进入休眠状态越快，功耗越低；但是在某些网络环境中，此时间越短，可能会造成数据传输不稳定
+                   建议在可以接受的功耗范围内，此值设置的越大越好
+                   如果没有设置此参数，此延时时长是和基站的配置有关，一般来说是10秒左右</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">nil</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">socket.setLowPower(<span class="number">5</span>)</pre></il>
+    </ul>
+
+</dd>
 </dl>
     <h2 class="section-header "><a name="Fields"></a>Fields</h2>
 
@@ -653,7 +725,7 @@ setTcpResendPara(<span class="number">4</span>,<span class="number">16</span>)</
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2021-04-07 15:39:27 </i>
+<i style="float:right;">Last updated 2021-08-02 13:53:19 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

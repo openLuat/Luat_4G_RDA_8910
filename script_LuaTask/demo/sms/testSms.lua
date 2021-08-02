@@ -11,7 +11,7 @@ require"sms"
 
 -----------------------------------------短信接收功能测试[开始]-----------------------------------------
 local function procnewsms(num,data,datetime)
-	log.info("testSms.procnewsms",num,data,datetime)
+	log.info("testSms.procnewsms",num,common.gb2312ToUtf8(data),datetime)
 end
 
 sms.setNewSmsCb(procnewsms)

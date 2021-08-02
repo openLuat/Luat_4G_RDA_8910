@@ -20,6 +20,7 @@ local sInstanceId
 local sConnectMode,sConnectHost,sConnectPort,sGetClientIdFnc,sGetUserNameFnc,sGetPasswordFnc
 local sKeepAlive,sCleanSession,sWill
 local  isSleep = false--休眠，不去重连服务器
+local  isAuthSleep =false --休眠，不去重连鉴权
 local sErrHandleCo,sErrHandleCb,sErrHandleTmout
 
 local outQueue =
@@ -123,13 +124,37 @@ function wakeup()
     sys.publish("ALITUN_WAKEUP")
     log.info("aLiYun.wakeup","exit sleep")
 end
-
 --- 查看打开阿里云物联网套件的是否允许连接状态
 -- @return bool 是否允许连接阿里云
 -- @usage
 -- local ar = aLiYun.sleepStatus()
 function sleepStatus()
     return isSleep
+end
+--- 断开阿里云物联网套件的鉴权连接，并且不再重连
+-- @return nil
+-- @usage
+-- aLiYun.Authsleep()
+function Authsleep()
+    isAuthSleep = true
+    log.info("aLiYun.Authsleep","open sleep, stop try reconnect")
+    sys.publish("aliyun_publish_ind","disconnect")
+end
+--- 重新打开阿里云物联网套件的鉴权连接
+-- @return nil
+-- @usage
+-- aLiYun.Authwakeup()
+function Authwakeup()
+    isAuthSleep = false
+    sys.publish("ALITUN_Auth_WAKEUP")
+    log.info("aLiYun.auth_wakeup","exit sleep")
+end
+--- 查看打开阿里云物联网套件的是否允许鉴权状态
+-- @return bool 是否允许连接阿里云
+-- @usage
+-- local ar = aLiYun.AuthSleepStatus()
+function AuthSleepStatus()
+    return isAuthSleep
 end
 
 function clientDataTask(host,tPorts,clientId,user,password)
@@ -226,6 +251,7 @@ end
 function clientAuthTask()
     while not socket.isReady() do sys.waitUntil("IP_READY_IND") end
     while true do
+        if isAuthSleep then sys.waitUntil("ALITUN_Auth_WAKEUP") end
         local retryCnt,authBody = 0,getBody("auth")
         while true do
             http.request("POST",
@@ -325,6 +351,7 @@ local function clientDirectTask()
         
         
         while true do
+            if isAuthSleep then sys.waitUntil("ALITUN_Auth_WAKEUP") end
             local mqttClient = mqtt.client(clientId,sKeepAlive or 240,userName,password)
             
             local r,ack = mqttClient:connect(sConnectHost,sConnectPort,"tcp_ssl")

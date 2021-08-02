@@ -1,2 +1,0 @@
-sendWaitRecv：示例代码应用相对丰富
-sendInterruptRecv：示例代码应用相对简单

@@ -187,7 +187,18 @@ function isgetloc()
 	return getloc
 end
 
-sys.subscribe("GPS_STATE", function(evt,para)
+local function ipReady()
+    if gps.isFix() then
+        runTimer()
+    else
+        if not lbsLocRequesting then
+            lbsLocRequesting = true
+            lbsLoc.request(getLocCb,nil,30000,"0","bs.openluat.com","12412",true)
+        end
+    end
+end
+
+local function gpsState(evt,para)
     log.info("agps.GPS_STATE",evt,para)
     if evt=="LOCATION_SUCCESS" or (evt=="CLOSE" and para==true) then
         runTimer()
@@ -204,14 +215,18 @@ sys.subscribe("GPS_STATE", function(evt,para)
             sys.timerStart(gps.setFastFix,2000,lat,lng,common.timeZoneConvert(tm.year,tm.month,tm.day,tm.hour,tm.min,tm.sec,8,0))
         end
     end
-end)
-sys.subscribe("IP_READY_IND", function()
-    if gps.isFix() then
-        runTimer()
-    else
-        if not lbsLocRequesting then
-            lbsLocRequesting = true
-            lbsLoc.request(getLocCb,nil,30000,"0","bs.openluat.com","12412",true)
-        end
-    end
-end)
+end
+
+function init()
+    sys.subscribe("GPS_STATE",gpsState)
+    sys.subscribe("IP_READY_IND",ipReady)
+    log.info("agps.init")
+end
+
+function unInit()
+    sys.unsubscribe("GPS_STATE",gpsState)
+    sys.unsubscribe("IP_READY_IND",ipReady)
+    log.info("agps.unInit")
+end
+
+init()

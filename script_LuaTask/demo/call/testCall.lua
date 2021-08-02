@@ -8,6 +8,7 @@
 module(...,package.seeall)
 require"cc"
 require"audio"
+require"common"
 
 --来电铃声播放协程ID
 local coIncoming
@@ -17,6 +18,58 @@ local function callVolTest()
     curVol = (curVol>=7) and 1 or (curVol+1)
     log.info("testCall.setCallVolume",curVol)
     audio.setCallVolume(curVol)
+end
+-- audiocore.streamplay
+
+local function testAudioStream(streamType)
+    sys.taskInit(
+        function()
+            while true do
+                tStreamType = streamType
+		    	log.info("AudioTest.AudioStreamTest", "AudioStreamPlay Start", streamType)
+                local tAudioFile =
+                {
+                    [audiocore.AMR] = "tip.amr",
+                    [audiocore.SPX] = "record.spx",
+                    [audiocore.PCM] = "alarm_door.pcm",
+                    [audiocore.MP3] = "sms.mp3"
+                }
+                local fileHandle = io.open("/lua/" .. tAudioFile[streamType], "rb")
+                if not fileHandle then
+                    log.error("AudioTest.AudioStreamTest", "Open file error")
+                    return
+                end
+
+                while true do
+                    local data = fileHandle:read(streamType == audiocore.SPX and 1200 or 1024)
+                    if not data then 
+		    			fileHandle:close() 
+                        while audiocore.streamremain() ~= 0 do
+                            sys.wait(20)	
+                        end
+                        sys.wait(1000)
+                        audiocore.stop() --添加audiocore.stop()接口，否则再次播放会播放不出来
+                        log.warn("AudioTest.AudioStreamTest", "AudioStreamPlay Over")
+                        return 
+		    		end
+
+                    local data_len = string.len(data)
+                    local curr_len = 1
+                    while true do
+                        curr_len = curr_len + audiocore.streamplay(tStreamType,string.sub(data,curr_len,-1),audiocore.PLAY_VOLTE)
+                        if curr_len>=data_len then
+                            break
+                        elseif curr_len == 0 then
+                            log.error("AudioTest.AudioStreamTest", "AudioStreamPlay Error", streamType)
+                            return
+                        end
+                        sys.wait(10)
+                    end
+                    sys.wait(10)
+                end  
+            end
+        end
+    )
 end
 
 --- “通话已建立”消息处理函数
@@ -31,15 +84,27 @@ local function connected(num)
     sys.timerLoopStart(callVolTest,5000)
     --通话中向对方播放TTS测试
     audio.play(7,"TTS","通话中TTS测试",7,nil,true,2000)
+    --通话中向对方播放音频
+    --[[
+    audio.setVolume(2)
+    log.info("AudioTest.AudioStreamTest.AMRFilePlayTest", "Start")
+    testAudioStream(audiocore.AMR)   
+    ]] 
     --110秒之后主动结束通话
     sys.timerStart(cc.hangUp,110000,num)
 end
 
 --- “通话已结束”消息处理函数
+-- @string discReason，通话结束原因值，取值范围如下：
+--                                     "CHUP"表示本端调用cc.hungUp()接口主动挂断
+--                                     "NO ANSWER"表示呼出后，到达对方，对方无应答，通话超时断开
+--                                     "BUSY"表示呼出后，到达对方，对方主动挂断
+--                                     "NO CARRIER"表示通话未建立或者其他未知原因的断开
+--                                     nil表示没有检测到原因值
 -- @return 无
-local function disconnected()
+local function disconnected(discReason)
     coIncoming = nil
-    log.info("testCall.disconnected")
+    log.info("testCall.disconnected",discReason)
     sys.timerStopAll(cc.hangUp)
     sys.timerStop(callVolTest)
     audio.stop()

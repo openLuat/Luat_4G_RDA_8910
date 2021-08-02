@@ -1,5 +1,4 @@
 --- 模块功能：远程升级.
--- 参考 http://ask.openluat.com/article/916 加深对远程升级功能的理解
 -- @module update
 -- @author openLuat
 -- @license MIT
@@ -27,11 +26,13 @@ local function httpDownloadCbFnc(result,statusCode,head)
 end
 
 local function processOta(stepData,totalLen,statusCode)
+   
     if stepData and totalLen then
         if statusCode=="200" or statusCode=="206" then
             if not otaBegin then sys.publish("LIB_UPDATE_OTA_DOWNLOAD_BEGIN") otaBegin=true end
-            if rtos.fota_process((sProcessedLen+stepData:len()>totalLen) and stepData:sub(1,totalLen-sProcessedLen) or stepData,totalLen)~=0 then 
-                log.error("update.processOta","fail")
+            local fotaProcessStatus=rtos.fota_process((sProcessedLen+stepData:len()>totalLen) and stepData:sub(1,totalLen-sProcessedLen) or stepData,totalLen)
+            if fotaProcessStatus~=0 then 
+                log.error("update.processOta","fail",fotaProcessStatus)
                 sys.publish("LIB_UPDATE_OTA_DOWNLOAD_END",false)
                 return false
             else

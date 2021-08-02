@@ -41,6 +41,7 @@
   <li><a href="../modules/aLiYun.html">aLiYun</a></li>
   <li><a href="../modules/aLiYunOta.html">aLiYunOta</a></li>
   <li><a href="../modules/agps.html">agps</a></li>
+  <li><a href="../modules/agpsHxxt.html">agpsHxxt</a></li>
   <li><a href="../modules/agpsZkw.html">agpsZkw</a></li>
   <li><a href="../modules/audio.html">audio</a></li>
   <li><a href="../modules/cc.html">cc</a></li>
@@ -50,6 +51,7 @@
   <li><a href="../modules/errDump.html">errDump</a></li>
   <li><a href="../modules/ftp.html">ftp</a></li>
   <li><a href="../modules/gps.html">gps</a></li>
+  <li><a href="../modules/gpsHxxt.html">gpsHxxt</a></li>
   <li><a href="../modules/gpsZkw.html">gpsZkw</a></li>
   <li><a href="../modules/http.html">http</a></li>
   <li><strong>lbsLoc</strong></li>
@@ -77,6 +79,7 @@
   <li><a href="../modules/uiWin.html">uiWin</a></li>
   <li><a href="../modules/update.html">update</a></li>
   <li><a href="../modules/utils.html">utils</a></li>
+  <li><a href="../modules/websocket.html">websocket</a></li>
   <li><a href="../modules/wifiScan.html">wifiScan</a></li>
 </ul>
 
@@ -102,7 +105,7 @@
 	<td class="name" nowrap><a href="#request">
     request (cbFnc<strong  style="color: gray;">[, reqAddr=nil]</strong><strong  style="color: gray;">[, timeout=20000]</strong><strong  style="color: gray;">[, productKey=nil]</strong><strong  style="color: gray;">[, host=nil]</strong><strong  style="color: gray;">[, port=nil]</strong><strong  style="color: gray;">[, reqTime=nil]</strong><strong  style="color: gray;">[, reqWifi=nil]</strong>)
     </a></td>
-	<td class="summary">发送根据基站查询经纬度请求（仅支持中国区域的位置查询）</td>
+	<td class="summary">发送基站/WIFI定位请求（仅支持中国区域的位置查询）</td>
 	</tr>
 </table>
 
@@ -120,7 +123,7 @@
     </strong>
     </dt>
     <dd>
-    <pre class="example"  style="color: red;">发送根据基站查询经纬度请求（仅支持中国区域的位置查询）</pre>
+    <pre class="example"  style="color: red;">发送基站/WIFI定位请求（仅支持中国区域的位置查询）</pre>
 
 
     <h3>Parameters:</h3>
@@ -128,7 +131,7 @@
         <li><span class="parameter">cbFnc</span>
             <span class="types"><span class="type">function</span></span>
         <pre class="example">用户回调函数，回调函数的调用形式为：
-              cbFnc(result,lat,lng,addr)
+              cbFnc(result,lat,lng,addr,time,locType)
               result：number类型
                       0表示成功
                       1表示网络环境尚未就绪
@@ -137,14 +140,23 @@
                       4表示接收服务器应答超时
                       5表示服务器返回查询失败
                       6表示socket已满，创建socket失败
-                      为0时，后面的3个参数才有意义
+                      为0时，后面的5个参数才有意义
               lat：string类型或者nil，纬度，整数部分3位，小数部分7位，例如"031.2425864"
-              lng：string类型或者nil，经度，整数部分3位，小数部分7位，例如"121.4736522"</pre>
+              lng：string类型或者nil，经度，整数部分3位，小数部分7位，例如"121.4736522"
+              addr：目前无意义
+              time：string类型或者nil，服务器返回的时间，6个字节，年月日时分秒，需要转为十六进制读取
+                      第一个字节：年减去2000，例如2017年，则为0x11
+                      第二个字节：月，例如7月则为0x07，12月则为0x0C
+                      第三个字节：日，例如11日则为0x0B
+                      第四个字节：时，例如18时则为0x12
+                      第五个字节：分，例如59分则为0x3B
+                      第六个字节：秒，例如48秒则为0x30
+              locType：numble类型或者nil，定位类型，0表示基站定位成功，255表示WIFI定位成功</pre>
         </li>
         <li><span class="parameter">reqAddr</span>
             <span class="types"><span class="type">bool</span></span>
          [<em>此参数可选，默认值为：</em> nil]
-        <pre class="example">此参数无意义，保留</pre>
+        <pre class="example">是否请求服务器返回具体的位置字符串信息，目前此功能不完善</pre>
         </li>
         <li><span class="parameter">timeout</span>
             <span class="types"><span class="type">number</span></span>
@@ -154,22 +166,22 @@
         <li><span class="parameter">productKey</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
          [<em>此参数可选，默认值为：</em> nil]
-        <pre class="example">IOT网站上的产品证书，此参数可选，用户如果在main.lua中定义了PRODUCT_KEY变量，就不需要传入此参数</pre>
+        <pre class="example">IOT网站上的产品证书，如果在main.lua中定义了PRODUCT_KEY变量，则此参数可以传nil</pre>
         </li>
         <li><span class="parameter">host</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
          [<em>此参数可选，默认值为：</em> nil]
-        <pre class="example">服务器域名，此参数可选，目前仅lib中agps.lua使用此参数。用户脚本中不需要传入此参数</pre>
+        <pre class="example">服务器域名，此参数可选，目前仅lib中agps.lua使用此参数。应用脚本可以直接传nil</pre>
         </li>
         <li><span class="parameter">port</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
          [<em>此参数可选，默认值为：</em> nil]
-        <pre class="example">服务器端口，此参数可选，目前仅lib中agps.lua使用此参数。用户脚本中不需要传入此参数</pre>
+        <pre class="example">服务器端口，此参数可选，目前仅lib中agps.lua使用此参数。应用脚本可以直接传nil</pre>
         </li>
         <li><span class="parameter">reqTime</span>
             <span class="types"><span class="type">bool</span></span>
          [<em>此参数可选，默认值为：</em> nil]
-        <pre class="example">是否需要服务器返回时间信息，true返回，false或者nil不返回，此参数可选，目前仅lib中agps.lua使用此参数。用户脚本中不需要传入此参数</pre>
+        <pre class="example">是否需要服务器返回时间信息，true返回，false或者nil不返回，此参数可选，目前仅lib中agps.lua使用此参数。应用脚本可以直接传nil</pre>
         </li>
         <li><span class="parameter">reqWifi</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
@@ -206,7 +218,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2021-04-07 15:39:27 </i>
+<i style="float:right;">Last updated 2021-08-02 13:53:19 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

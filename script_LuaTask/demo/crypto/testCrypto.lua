@@ -76,6 +76,18 @@ local function md5Test()
 	log.info("testCrypto.sys.lua md5",crypto.md5("/lua/sys.lua","file"))
 end
 
+--- 流式sm3算法测试
+-- @return 无
+-- @usage flowSm3Test()
+local function flowSm3Test()
+    local fSm3Obj=crypto.sm3start()
+    local testTable={"lqlq666lqlq946","07946lq94607946","lq54075407540707946"}
+    for i=1, #(testTable) do
+        fSm3Obj:sm3update(testTable[i])
+    end
+    log.info("testCrypto.flowSm3Test",fSm3Obj:sm3finish())
+end
+
 --- hmac_sha1算法测试
 -- @return 无
 -- @usage hmacSha1Test()
@@ -132,23 +144,32 @@ end
 -- @return 无
 -- @usage aesTest()
 local function aesTest()
-        local originStr = "AES128 ECB ZeroP"
+
+        local originStr = "AES128 ECB ZeroP test"--长度为16的整数倍
         --加密模式：ECB；填充方式：ZeroPadding；密钥：1234567890123456；密钥长度：128 bit
         local encodeStr = crypto.aes_encrypt("ECB","ZERO",originStr,"1234567890123456")
         print(originStr,"encrypt",string.toHex(encodeStr))
         log.info("testCrypto.decrypt",crypto.aes_decrypt("ECB","ZERO",encodeStr,"1234567890123456"))
 
-        originStr = "AES128 ECB ZeroP"
+        originStr = "AES128 ECB Pkcs5Padding test"
         --加密模式：ECB；填充方式：Pkcs5Padding；密钥：1234567890123456；密钥长度：128 bit
         encodeStr = crypto.aes_encrypt("ECB","PKCS5",originStr,"1234567890123456")
         print(originStr,"encrypt",string.toHex(encodeStr))
         log.info("testCrypto.decrypt",crypto.aes_decrypt("ECB","PKCS5",encodeStr,"1234567890123456"))
 
-        originStr = "AES128 ECB ZeroPt"
+        originStr = "AES128 ECB Pkcs7Padding test"
         --加密模式：ECB；填充方式：Pkcs7Padding；密钥：1234567890123456；密钥长度：128 bit
         encodeStr = crypto.aes_encrypt("ECB","PKCS7",originStr,"1234567890123456")
         print(originStr,"encrypt",string.toHex(encodeStr))
         log.info("testCrypto.decrypt",crypto.aes_decrypt("ECB","PKCS7",encodeStr,"1234567890123456"))
+
+        --lyy 21/05/26 添加ECB NonePadding算法测试
+        originStr = ("AES128 ECB NoneP")--长度为16的整数倍
+        --加密模式：ECB；填充方式：NONE；密钥：1234567890123456；密钥长度：128 bit；偏移量：1234567890666666
+        encodeStr = crypto.aes_encrypt("ECB","NONE",originStr,"1234567890123456")
+        print(originStr,"encrypt",string.toHex(encodeStr))
+        log.info("testCrypto.decrypt",crypto.aes_decrypt("ECB","NONE",encodeStr,"1234567890123456"))
+        --lyy 21/05/26 添加ECB NonePadding算法测试 
 
         originStr = "AES192 ECB ZeroPadding test"
         --加密模式：ECB；填充方式：ZeroPadding；密钥：123456789012345678901234；密钥长度：192 bit
@@ -186,7 +207,7 @@ local function aesTest()
         print(originStr,"encrypt",string.toHex(encodeStr))
         log.info("testCrypto.decrypt",crypto.aes_decrypt("ECB","PKCS7",encodeStr,"12345678901234567890123456789012"))
 
-
+        
 
 
         originStr = "AES128 CBC ZeroPadding test"
@@ -206,6 +227,14 @@ local function aesTest()
         encodeStr = crypto.aes_encrypt("CBC","PKCS7",originStr,"1234567890123456","1234567890666666")
         print(originStr,"encrypt",string.toHex(encodeStr))
         log.info("testCrypto.decrypt",crypto.aes_decrypt("CBC","PKCS7",encodeStr,"1234567890123456","1234567890666666"))
+
+        --lyy 21/05/26 添加CBC NonePadding算法测试
+        originStr = ("AES128 CBC NoneP")--长度为16的整数倍
+        --加密模式：CBC；填充方式：NONE；密钥：1234567890123456；密钥长度：128 bit；偏移量：1234567890666666
+        encodeStr = crypto.aes_encrypt("CBC","NONE",originStr,"1234567890123456","1234567890666666")
+        print(originStr,"encrypt",string.toHex(encodeStr))
+        log.info("testCrypto.decrypt",crypto.aes_decrypt("CBC","NONE",encodeStr,"1234567890123456","1234567890666666"))
+        --lyy 21/05/26 添加CBC NonePadding算法测试
 
         originStr = "AES192 CBC ZeroPadding test"
         --加密模式：CBC；填充方式：ZeroPadding；密钥：123456789012345678901234；密钥长度：192 bit；偏移量：1234567890666666
@@ -243,8 +272,7 @@ local function aesTest()
         print(originStr,"encrypt",string.toHex(encodeStr))
         log.info("testCrypto.decrypt",crypto.aes_decrypt("CBC","PKCS7",encodeStr,"12345678901234567890123456789012","1234567890666666"))
 
-
-
+        
 
 
         originStr = "AES128 CTR ZeroPadding test"
@@ -265,7 +293,7 @@ local function aesTest()
         print(originStr,"encrypt",string.toHex(encodeStr))
         log.info("testCrypto.decrypt",crypto.aes_decrypt("CTR","PKCS7",encodeStr,"1234567890123456","1234567890666666"))
 
-        originStr = "AES128 CTR NonePadding test"
+        originStr = "AES128 CTR NoneP"--长度为16的整数倍
         --加密模式：CTR；填充方式：NonePadding；密钥：1234567890123456；密钥长度：128 bit；偏移量：1234567890666666
         encodeStr = crypto.aes_encrypt("CTR","NONE",originStr,"1234567890123456","1234567890666666")
         print(originStr,"encrypt",string.toHex(encodeStr))
@@ -289,7 +317,7 @@ local function aesTest()
         print(originStr,"encrypt",string.toHex(encodeStr))
         log.info("testCrypto.decrypt",crypto.aes_decrypt("CTR","PKCS7",encodeStr,"123456789012345678901234","1234567890666666"))
 
-        originStr = "AES192 CTR NonePadding test"
+        originStr = "AES192 CTR NoneP"--长度为16的整数倍
         --加密模式：CTR；填充方式：NonePadding；密钥：123456789012345678901234；密钥长度：192 bit；偏移量：1234567890666666
         encodeStr = crypto.aes_encrypt("CTR","NONE",originStr,"123456789012345678901234","1234567890666666")
         print(originStr,"encrypt",string.toHex(encodeStr))
@@ -313,11 +341,12 @@ local function aesTest()
         print(originStr,"encrypt",string.toHex(encodeStr))
         log.info("testCrypto.decrypt",crypto.aes_decrypt("CTR","PKCS7",encodeStr,"12345678901234567890123456789012","1234567890666666"))
 
-        originStr = "AES256 CTR NonePadding test"
+        originStr = "AES256 CTR NoneP"--长度为16的整数倍
         --加密模式：CTR；填充方式：NonePadding；密钥：12345678901234567890123456789012；密钥长度：256 bit；偏移量：1234567890666666
         encodeStr = crypto.aes_encrypt("CTR","NONE",originStr,"12345678901234567890123456789012","1234567890666666")
         print(originStr,"encrypt",string.toHex(encodeStr))
         log.info("testCrypto.decrypt",crypto.aes_decrypt("CTR","NONE",encodeStr,"12345678901234567890123456789012","1234567890666666"))
+      
 end
 
 --rsa算法测试
@@ -357,65 +386,143 @@ end
 local function desTest()
 
         local originStr = "123456781234"
+      
 		--加密模式：DES CBC；填充方式：ZERO；密钥：12345678; 偏移：00000000
         encodeStr = crypto.des_encrypt("CBC","ZERO",originStr,"12345678","00000000")
-		print(originStr,"DES ECB ZeroPadding encrypt",string.toHex(encodeStr))
+		print(originStr,"DES CBC ZeroPadding encrypt",string.toHex(encodeStr))
         log.info("DES ECB ZeroPadding decrypt",crypto.des_decrypt("CBC","ZERO",encodeStr,"12345678","00000000"))
-        
+
 		originStr = "123456789"
         --加密模式：DES CBC；填充方式：Pkcs5Padding；密钥：12345678; 偏移：00000000
         encodeStr = crypto.des_encrypt("CBC","PKCS5",originStr,"12345678","00000000")
-        print(originStr,"DES ECB Pkcs5Padding encrypt",string.toHex(encodeStr))
-        log.info("DES ECB Pkcs5Padding decrypt",crypto.des_decrypt("CBC","PKCS5",encodeStr,"12345678","00000000"))  
+        print(originStr,"DES CBC Pkcs5Padding encrypt",string.toHex(encodeStr))
+        log.info("DES ECB Pkcs5Padding decrypt",crypto.des_decrypt("CBC","PKCS5",encodeStr,"12345678","00000000"))
+
         
+
+        --lyy 21/05/26 添加CBC NonePadding算法测试
+        originStr = ("DES064 CBC NoneP")--长度为16的整数倍,且密钥长度只支持8位
+        --加密模式：CBC；填充方式：NONE；密钥：12345678；密钥长度：64 bit；偏移量：00000000
+        encodeStr = crypto.des_encrypt("CBC","NONE",originStr,"12345678","00000000")
+        print(originStr,"encrypt",string.toHex(encodeStr))
+        log.info("testCrypto.decrypt",crypto.des_decrypt("CBC","NONE",encodeStr,"12345678","00000000"))
+        --lyy 21/05/26 添加CBC NonePadding算法测试
+
+        --lyy 21/05/26 添加CBC Pkcs7Padding算法测试
+        originStr = "123456789"
+        --加密模式：DES CBC；填充方式：Pkcs7Padding；密钥：12345678; 偏移：00000000
+        encodeStr = crypto.des_encrypt("CBC","PKCS7",originStr,"12345678","00000000")
+        print(originStr,"DES CBC Pkcs7Padding encrypt",string.toHex(encodeStr))
+        log.info("DES CBC Pkcs7Padding decrypt",crypto.des_decrypt("CBC","PKCS7",encodeStr,"12345678","00000000"))
+        --lyy 21/05/26 添加CBC Pkcs7Padding算法测试
+
         originStr = "123456789"
         --加密模式：DES ECB；填充方式：Pkcs7Padding；密钥：12345678
         encodeStr = crypto.des_encrypt("ECB","PKCS7",originStr,"12345678","12345678")
         print(originStr,"DES ECB Pkcs7Padding encrypt",string.toHex(encodeStr))
         log.info("DES ECB Pkcs7Padding decrypt",crypto.des_decrypt("ECB","PKCS7",encodeStr,"12345678"))
-        
+
         originStr = ("31323334353637383900000000000000"):fromHex()
         --加密模式：DES ECB；填充方式：NONE；密钥：12345678
         encodeStr = crypto.des_encrypt("ECB","NONE",originStr,"12345678")
         print(originStr,"DES ECB NonePadding encrypt",string.toHex(encodeStr))
         log.info("DES ECB NonePadding decrypt",string.toHex(crypto.des_decrypt("ECB","NONE",encodeStr,"12345678")))
+
+
+        --lyy 21/05/26 添加ECB Pkcs5Padding算法测试
+        originStr = "123456789"
+        --加密模式：DES ECB；填充方式：Pkcs5Padding；密钥：12345678
+        encodeStr = crypto.des_encrypt("ECB","PKCS5",originStr,"12345678","12345678")
+        print(originStr,"DES ECB Pkcs5Padding encrypt",string.toHex(encodeStr))
+        log.info("DES ECB Pkcs5Padding decrypt",crypto.des_decrypt("ECB","PKCS5",encodeStr,"12345678"))
+        --lyy 21/05/26 添加ECB Pkcs5Padding算法测试
+
+        --lyy 21/05/26 添加ECB ZeroPadding算法测试
+        originStr = "123456789"
+        --加密模式：DES ECB；填充方式：ZERO；密钥：12345678; 偏移：00000000
+        encodeStr = crypto.des_encrypt("ECB","ZERO",originStr,"12345678")
+		print(originStr,"DES ECB ZeroPadding encrypt",string.toHex(encodeStr))
+        log.info("DES ECB ZeroPadding decrypt",crypto.des_decrypt("ECB","ZERO",encodeStr,"12345678"))
+        --lyy 21/05/26 添加ECB ZeroPadding算法测试
+
 end
 --DES3算法测试
 local function des3Test()
 
+
         local originStr = "123456781234"
-		--加密模式：DES CBC；填充方式：ZERO；密钥：123456781234567812345678; 偏移：00000000
+		--加密模式：DES3 CBC；填充方式：ZERO；密钥：123456781234567812345678; 偏移：00000000
         encodeStr = crypto.des3_encrypt("CBC","ZERO",originStr,"123456781234567812345678","00000000")
-		print(originStr,"DES ECB ZeroPadding encrypt",string.toHex(encodeStr))
-        log.info("DES ECB ZeroPadding decrypt",crypto.des3_decrypt("CBC","ZERO",encodeStr,"123456781234567812345678","00000000"))
-        
+		print(originStr,"DES3 CBC ZeroPadding encrypt",string.toHex(encodeStr))
+        log.info("DES3 CBC ZeroPadding decrypt",crypto.des3_decrypt("CBC","ZERO",encodeStr,"123456781234567812345678","00000000"))
+
 		originStr = "123456789"
-        --加密模式：DES CBC；填充方式：Pkcs5Padding；密钥：123456781234567812345678; 偏移：00000000
+        --加密模式：DES3 CBC；填充方式：Pkcs5Padding；密钥：123456781234567812345678; 偏移：00000000
         encodeStr = crypto.des3_encrypt("CBC","PKCS5",originStr,"123456781234567812345678","00000000")
-        print(originStr,"DES ECB Pkcs5Padding encrypt",string.toHex(encodeStr))
-        log.info("DES ECB Pkcs5Padding decrypt",crypto.des3_decrypt("CBC","PKCS5",encodeStr,"123456781234567812345678","00000000"))  
-        
+        print(originStr,"DES3 CBC Pkcs5Padding encrypt",string.toHex(encodeStr))
+        log.info("DES3 CBC Pkcs5Padding decrypt",crypto.des3_decrypt("CBC","PKCS5",encodeStr,"123456781234567812345678","00000000"))
+
+
+        --lyy 21/05/26 添加CBC NonePadding算法测试
+        originStr = ("DES3192 CBC None")--长度为16的整数倍，密钥只支持16或24位
+        --加密模式：CBC；填充方式：NONE；密钥：123456781234567812345678; 密钥长度：192 bit；偏移量：00000000
+        encodeStr = crypto.des3_encrypt("CBC","NONE",originStr,"123456781234567812345678","00000000")
+        print(originStr,"encrypt",string.toHex(encodeStr))
+        log.info("testCrypto.decrypt",crypto.des3_decrypt("CBC","NONE",encodeStr,"123456781234567812345678","00000000"))
+        --lyy 21/05/26 添加CBC NonePadding算法测试
+
+        --lyy 21/05/26 添加CBC Pkcs7Padding算法测试
         originStr = "123456789"
-        --加密模式：DES ECB；填充方式：Pkcs7Padding；密钥：123456781234567812345678
+        --加密模式：DES3 CBC；填充方式：Pkcs7Padding；密钥：123456781234567812345678; 偏移：00000000
+        encodeStr = crypto.des3_encrypt("CBC","PKCS7",originStr,"123456781234567812345678","00000000")
+        print(originStr,"DES3 CBC Pkcs7Padding encrypt",string.toHex(encodeStr))
+        log.info("DES3 CBC Pkcs7Padding decrypt",crypto.des3_decrypt("CBC","PKCS7",encodeStr,"123456781234567812345678","00000000"))
+        --lyy 21/05/26 添加CBC Pkcs7Padding算法测试
+
+
+        originStr = "123456789"
+        --加密模式：DES3 ECB；填充方式：Pkcs7Padding；密钥：123456781234567812345678
         encodeStr = crypto.des3_encrypt("ECB","PKCS7",originStr,"123456781234567812345678","123456781234567812345678")
-        print(originStr,"DES ECB Pkcs7Padding encrypt",string.toHex(encodeStr))
-        log.info("DES ECB Pkcs7Padding decrypt",crypto.des3_decrypt("ECB","PKCS7",encodeStr,"123456781234567812345678"))
-        
+        print(originStr,"DES3 ECB Pkcs7Padding encrypt",string.toHex(encodeStr))
+        log.info("DES3 ECB Pkcs7Padding decrypt",crypto.des3_decrypt("ECB","PKCS7",encodeStr,"123456781234567812345678"))
+
         originStr = ("31323334353637383900000000000000"):fromHex()
-        --加密模式：DES ECB；填充方式：NONE；密钥：123456781234567812345678
+        --加密模式：DES3 ECB；填充方式：NONE；密钥：123456781234567812345678
         encodeStr = crypto.des3_encrypt("ECB","NONE",originStr,"123456781234567812345678")
-        print(originStr,"DES ECB NonePadding encrypt",string.toHex(encodeStr))
-        log.info("DES ECB NonePadding decrypt",string.toHex(crypto.des3_decrypt("ECB","NONE",encodeStr,"123456781234567812345678")))
+        print(originStr,"DES3 ECB NonePadding encrypt",string.toHex(encodeStr))
+        log.info("DES3 ECB NonePadding decrypt",string.toHex(crypto.des3_decrypt("ECB","NONE",encodeStr,"123456781234567812345678")))
+
+
+        --lyy 21/05/26 添加ECB Pkcs5Padding算法测试
+        originStr = "123456789"
+        --加密模式：DES3 ECB；填充方式：Pkcs5Padding；密钥：123456781234567812345678
+        encodeStr = crypto.des3_encrypt("ECB","PKCS5",originStr,"123456781234567812345678","123456781234567812345678")
+        print(originStr,"DES3 ECB Pkcs5Padding encrypt",string.toHex(encodeStr))
+        log.info("DES3 ECB Pkcs5Padding decrypt",crypto.des3_decrypt("ECB","PKCS5",encodeStr,"123456781234567812345678"))
+        --lyy 21/05/26 添加ECB Pkcs5Padding算法测试
+    
+        --lyy 21/05/26 添加ECB ZeroPadding算法测试
+        originStr = "123456789"
+        --加密模式：DES3 ECB；填充方式：ZERO；密钥：123456781234567812345678
+        encodeStr = crypto.des3_encrypt("ECB","ZERO",originStr,"123456781234567812345678")
+		print(originStr,"DES3 ECB ZeroPadding encrypt",string.toHex(encodeStr))
+        log.info("DES3 ECB ZeroPadding decrypt",crypto.des3_decrypt("ECB","ZERO",encodeStr,"123456781234567812345678"))
+        --lyy 21/05/26 添加ECB ZeroPadding算法测试
+
+
 end
 
 --- 算法测试入口
 -- @return
 local function cryptoTest()
+
     print("test start")
     hmacMd5Test()
     md5Test()
     hmacSha1Test()
     flowMd5Test()
+    --从LuatOS-Air_V3102版本开始，才支持SM3算法
+    pcall(flowSm3Test)
     base64Test()
     crcTest()
     aesTest()
@@ -427,6 +534,7 @@ local function cryptoTest()
     desTest()
     des3Test()
     print("test end")
+
 end
 
 sys.timerStart(cryptoTest,6000)

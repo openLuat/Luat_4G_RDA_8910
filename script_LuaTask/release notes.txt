@@ -1,3 +1,39 @@
+发布时间：2021/08/02 10:08
+修改记录：
+    一、lib脚本修改
+	lib脚本版本号：2.4.0
+	(1)lbsLoc.lua：定位成功时的回调函数cbFnc(result,lat,lng,addr,time,locType)增加一个回调参数locType，表示定位类型，0表示基站定位，255表示WIFI定位
+	(2)lbsLoc.lua：修正“request接口timeout参数功能不生效”的问题
+	(3)gps.lua、gpsZkw、gpsHxxt：扩展3款gps芯片功能，支持demo中自适应3款gps芯片功能
+        (4)misc.lua：新增getModelType()接口，支持获取模块型号
+        (5)patch.lua：修正“因系统进入休眠状态，导致sd卡挂载概率失败”的问题
+        (6)cc.lua：支持"通话断开原因值"的功能
+    二、demo脚本修改
+	(1)pwm呼吸灯：新增pwm呼吸灯demo
+	(2)bluetooth：新增“蓝牙关闭消息上报”功能演示
+	(3)bluetooth：修正“蓝牙数据接收时，因为代码逻辑问题导致的数据接收延迟”的问题
+	(4)bluetooth：新增“特征值的设置与读取”功能演示
+	(5)ui：新增GC9306、ST7789驱动
+	(6)cc：新增“通话中向对方播放音频”功能演示
+	(7)cc：新增“基站/WIFI定位成功类型”功能演示
+	(8)lbsLoc：新增“基站/WIFI定位成功类型”功能演示
+	(9)gpio：新增“脉冲计数检测”功能演示
+	(10)crypt：新增“SM3算法”功能演示
+
+
+
+
+发布时间：2021/05/17 13:27
+修改记录：
+    一、lib脚本修改
+	lib脚本版本号：2.3.9
+	(1)websocket.lua：新增websocket功能
+    二、demo脚本修改
+	(1)camera：新增gc0130驱动ic拍摄640*480照片的演示功能
+	(2)websocket：新增websocket演示功能
+
+
+
 发布时间：2021/04/07 15:41
 修改记录：
     一、lib脚本修改

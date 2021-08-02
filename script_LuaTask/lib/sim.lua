@@ -66,7 +66,7 @@ end
 -- @return string ,返回值：sNumber，如果还没有读取出来或者读取失败，则返回""
 -- @usage 注意：开机lua脚本运行之后，会发送at命令去查询本机号码，所以需要一定时间才能获取到本机号码。开机后立即调用此接口，基本上返回""
 -- @usage 注意：此功能需要卡商支持，卡商必须把卡写到sim卡中，模块才能从卡中读出号码；目前市场上的很多卡，没有写入号码，是无法读取得
--- @usage sim.getMcc()
+-- @usage sim.getNumber()
 function getNumber()
     return sNumber or ""
 end

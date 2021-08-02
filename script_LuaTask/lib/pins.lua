@@ -108,6 +108,7 @@ end
 rtos.on(rtos.MSG_INT, function(msg)
     if interruptCallbacks[msg.int_resnum] == nil then
         log.warn('pins.rtos.on', 'warning:rtos.MSG_INT callback nil', msg.int_resnum)
+        return
     end
     interruptCallbacks[msg.int_resnum](msg.int_id)
 end)

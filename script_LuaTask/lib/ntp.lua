@@ -60,7 +60,7 @@ end
 
 local sTs,sFnc,sFun
 
---- 同步时间，每个NTP服务器尝试3次，超时8秒,适用于被任务函数调用
+-- 同步时间，随机每个NTP服务器尝试1次，超时8秒,适用于被任务函数调用
 -- @number ts,每隔ts小时同步1次
 -- @function fnc,同步成功后回调函数
 -- @function fun,同步成功前回调函数
@@ -110,30 +110,41 @@ function ntpTime(ts, fnc, fun)
         end
         if ntpEnd then
             sys.publish("NTP_SUCCEED")
-            log.info("ntp.timeSync is date:", ntim.year .. "/" .. ntim.month .. "/" .. ntim.day .. "," .. ntim.hour .. ":" .. ntim.min .. ":" .. ntim.sec)
-            if sTs == nil or type(sTs) ~= "number" then break end
-            sys.wait(sTs * 3600 * 1000)
+            log.info("ntp.timeSync is date:", ntim.year .. "/" .. ntim.month .. "/" .. ntim.day .. "," .. ntim.hour .. ":" .. ntim.min .. ":" .. ntim.sec)            
         else
             log.warn("ntp.timeSync is error!")
-            sys.wait(1000)
         end
+        if sTs == nil or type(sTs) ~= "number" then break end
+        sys.wait(sTs * 3600 * 1000)
     end
 end
---- 自动同步时间任务，适合独立执行.
+--- ntp同步时间任务.
 -- 重要提醒！！！！！！
 -- 本功能模块采用多个免费公共的NTP服务器来同步时间
 -- 并不能保证任何时间任何地点都能百分百同步到正确的时间
 -- 所以，如果用户项目中的业务逻辑严格依赖于时间同步功能
 -- 则不要使用使用本功能模块，建议使用自己的应用服务器来同步时间
--- @number ts,每隔ts小时同步1次
--- @function fnc,同步成功后回调函数
--- @function fun,同步成功前回调函数
+-- @number[opt=nil] period，调用本接口会立即同步一次；每隔period小时再自动同步1次，nil表示仅同步一次
+-- @function[opt=nil] fnc，同步结束，设置系统时间后的回调函数，回调函数的调用形式为：
+--                         fnc(time，result)
+--                         time表示设置之后的系统时间，table类型，例如{year=2017,month=2,day=14,hour=14,min=19,sec=23}
+--                         result为true表示成功，false或者nil为失败
+-- @function[opt=nil] fun，同步结束，设置系统时间前的回调函数，回调函数的调用形式为：fun()
 -- @return nil
--- @usage ntp.timeSync() -- 只同步1次
--- @usage ntp.timeSync(1) -- 1小时同步1次
--- @usage ntp.timeSync(nil,fnc) -- 只同步1次，同步成功后执行fnc()
--- @usage ntp.timeSync(24,fnc) -- 24小时同步1次，同步成功后执行fnc()
-function timeSync(ts, fnc, fun)
-    sTs,sFnc,sFun = ts, fnc, fun
+-- 
+-- @usage 
+-- 立即同步一次（仅同步这一次）：
+-- ntp.timeSync()
+-- 
+-- 立即同步一次，之后每隔1小时自动同步一次：
+-- ntp.timeSync(1)
+-- 
+-- 立即同步一次（仅同步这一次），同步结束后执行fnc(time,result)：
+-- ntp.timeSync(nil,fnc)
+-- 
+-- 立即同步一次，之后每隔24小时自动同步一次，每次同步结束后执行fnc(time,result)：
+-- ntp.timeSync(24,fnc)
+function timeSync(period, fnc, fun)
+    sTs,sFnc,sFun = period, fnc, fun
     sys.taskInit(ntpTime)
 end

@@ -55,9 +55,9 @@ end
 sys.taskInit(function()
     sys.wait(10000)
     local spi_flash = spiFlash.setup(spi.SPI_1)
-    local manufacutreID, deviceID = spi_flash:readFlashID()
-    log.info('testSPIFlash', 'spi flash id', manufacutreID, deviceID)
-    local flashName = (manufacutreID and deviceID) and flashlist[manufacutreID * 256 + deviceID]
+    local manufactureID, deviceID = spi_flash:readFlashID()
+    log.info('testSPIFlash', 'spi flash id', manufactureID, deviceID)
+    local flashName = (manufactureID and deviceID) and flashlist[manufactureID * 256 + deviceID]
     if not flashName then log.error('unknown flash name') return end
     log.info('testSPIFlash', 'flash name', flashName)
     local capcity = tonumber(flashName:sub(flashName:find('q') + 1, -1))

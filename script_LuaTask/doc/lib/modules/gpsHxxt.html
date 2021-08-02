@@ -1,0 +1,1220 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Luat开源项目脚本lib</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>script_LuaTask lib</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/aLiYun.html">aLiYun</a></li>
+  <li><a href="../modules/aLiYunOta.html">aLiYunOta</a></li>
+  <li><a href="../modules/agps.html">agps</a></li>
+  <li><a href="../modules/agpsHxxt.html">agpsHxxt</a></li>
+  <li><a href="../modules/agpsZkw.html">agpsZkw</a></li>
+  <li><a href="../modules/audio.html">audio</a></li>
+  <li><a href="../modules/cc.html">cc</a></li>
+  <li><a href="../modules/clib.html">clib</a></li>
+  <li><a href="../modules/common.html">common</a></li>
+  <li><a href="../modules/console.html">console</a></li>
+  <li><a href="../modules/errDump.html">errDump</a></li>
+  <li><a href="../modules/ftp.html">ftp</a></li>
+  <li><a href="../modules/gps.html">gps</a></li>
+  <li><strong>gpsHxxt</strong></li>
+  <li><a href="../modules/gpsZkw.html">gpsZkw</a></li>
+  <li><a href="../modules/http.html">http</a></li>
+  <li><a href="../modules/lbsLoc.html">lbsLoc</a></li>
+  <li><a href="../modules/led.html">led</a></li>
+  <li><a href="../modules/link.html">link</a></li>
+  <li><a href="../modules/log.html">log</a></li>
+  <li><a href="../modules/misc.html">misc</a></li>
+  <li><a href="../modules/mqtt.html">mqtt</a></li>
+  <li><a href="../modules/net.html">net</a></li>
+  <li><a href="../modules/netLed.html">netLed</a></li>
+  <li><a href="../modules/ntp.html">ntp</a></li>
+  <li><a href="../modules/nvm.html">nvm</a></li>
+  <li><a href="../modules/patch.html">patch</a></li>
+  <li><a href="../modules/pb.html">pb</a></li>
+  <li><a href="../modules/pins.html">pins</a></li>
+  <li><a href="../modules/pm.html">pm</a></li>
+  <li><a href="../modules/powerKey.html">powerKey</a></li>
+  <li><a href="../modules/record.html">record</a></li>
+  <li><a href="../modules/ril.html">ril</a></li>
+  <li><a href="../modules/scanCode.html">scanCode</a></li>
+  <li><a href="../modules/sim.html">sim</a></li>
+  <li><a href="../modules/sms.html">sms</a></li>
+  <li><a href="../modules/socket.html">socket</a></li>
+  <li><a href="../modules/sys.html">sys</a></li>
+  <li><a href="../modules/uiWin.html">uiWin</a></li>
+  <li><a href="../modules/update.html">update</a></li>
+  <li><a href="../modules/utils.html">utils</a></li>
+  <li><a href="../modules/websocket.html">websocket</a></li>
+  <li><a href="../modules/wifiScan.html">wifiScan</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>gpsHxxt</code></h1>
+<p>模块功能：GPS模块管理
+ 注意：此功能模块中的功能接口可以分为四大类：
+ 1、GPS开启
+ 2、GPS关闭
+ 3、GPS定位数据读取
+ 4、GPS参数和功能设置
+ 1、2、3是通用功能，除了支持合宙的Air530模块，理论上也支持其他厂家的串口GPS模块
+ 4是专用功能，仅支持合宙的Air530H、530Z和Air82x系列模块</p>
+<p></p>
+    <h3>Info:</h3>
+    <ul>
+        <li><strong>Copyright</strong>: openLuat</li>
+        <li><strong>Release</strong>: 2021.6.19</li>
+        <li><strong>License</strong>: MIT</li>
+        <li><strong>Author</strong>: openLuat</li>
+    </ul>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#open">
+    open (mode, para)
+    </a></td>
+	<td class="summary">打开一个“GPS应用”
+ “GPS应用”：指的是使用GPS功能的一个应用
+ 例如，假设有如下3种需求，要打开GPS，则一共有3个“GPS应用”：
+ “GPS应用1”：每隔1分钟打开一次GPS
+ “GPS应用2”：设备发生震动时打开GPS
+ “GPS应用3”：收到一条特殊短信时打开GPS
+ 只有所有“GPS应用”都关闭了，才会去真正关闭GPS
+ 每个“GPS应用”打开或者关闭GPS时，最多有4个参数，其中 GPS应用模式和GPS应用标记 共同决定了一个唯一的“GPS应用”：
+ 1、GPS应用模式(必选)
+ 2、GPS应用标记(必选)
+ 3、GPS开启最大时长[可选]
+ 4、回调函数[可选]
+ 例如gpsHxxt.open(gpsHxxt.TIMERORSUC,{tag="TEST",val=120,cb=testGpsCb})
+ gpsHxxt.TIMERORSUC为GPS应用模式，"TEST"为GPS应用标记，120秒为GPS开启最大时长，testGpsCb为回调函数</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#close">
+    close (mode, para)
+    </a></td>
+	<td class="summary">关闭一个“GPS应用”
+ 只是从逻辑上关闭一个GPS应用，并不一定真正关闭GPS，是有所有的GPS应用都处于关闭状态，才回去真正关闭GPS</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#closeAll">
+    closeAll ()
+    </a></td>
+	<td class="summary">关闭所有“GPS应用”</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isActive">
+    isActive (mode, para)
+    </a></td>
+	<td class="summary">判断一个“GPS应用”是否处于激活状态</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#setPowerCbFnc">
+    setPowerCbFnc (cbFnc)
+    </a></td>
+	<td class="summary">设置GPS模块供电控制的回调函数
+ 如果使用的是Air800，或者供电控制使用的是LDO_VCAM，则打开GPS应用前不需要调用此接口进行设置
+ 否则在调用gpsHxxt.open前，使用此接口，传入自定义的供电控制函数cbFnc，GPS开启时，gpsHxxt.lua自动执行cbFnc(true)，GPS关闭时，gpsHxxt.lua自动执行cbFnc(false)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#setUart">
+    setUart (id, baudrate, databits, parity, stopbits)
+    </a></td>
+	<td class="summary">设置GPS模块和GSM模块之间数据通信的串口参数
+ 如果使用的是Air800，或者使用的UART2(波特率115200，数据位8，无检验位，停止位1)，则打开GPS应用前不需要调用此接口进行设置
+ 否则在调用gpsHxxt.open前，使用此接口，传入UART参数</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#setNmeaMode">
+    setNmeaMode (mode, cbFnc)
+    </a></td>
+	<td class="summary">设置NMEA数据处理模式.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#setRunMode">
+    setRunMode (mode, runTm, sleepTm)
+    </a></td>
+	<td class="summary">设置GPS模块的运行模式.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#setLocationFilter">
+    setLocationFilter (<strong  style="color: gray;">[seconds=0]</strong>)
+    </a></td>
+	<td class="summary">设置GPS定位成功后经纬度的过滤时间.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isOpen">
+    isOpen ()
+    </a></td>
+	<td class="summary">获取GPS模块是否处于开启状态</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isFix">
+    isFix ()
+    </a></td>
+	<td class="summary">获取GPS模块是否定位成功</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isOnece">
+    isOnece ()
+    </a></td>
+	<td class="summary">获取GPS模块是否首次定位成功过</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getLocation">
+    getLocation (<strong  style="color: gray;">[typ=nil]</strong>)
+    </a></td>
+	<td class="summary">获取度格式的经纬度信息</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getAltitude">
+    getAltitude ()
+    </a></td>
+	<td class="summary">获取海拔</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getSpeed">
+    getSpeed ()
+    </a></td>
+	<td class="summary">获取速度</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getOrgSpeed">
+    getOrgSpeed ()
+    </a></td>
+	<td class="summary">获取原始速度,字符串带浮点</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getCourse">
+    getCourse ()
+    </a></td>
+	<td class="summary">获取方向角</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getViewedSateCnt">
+    getViewedSateCnt ()
+    </a></td>
+	<td class="summary">获取可见卫星的个数</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getUsedSateCnt">
+    getUsedSateCnt ()
+    </a></td>
+	<td class="summary">获取定位使用的卫星个数</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getGgaloc">
+    getGgaloc ()
+    </a></td>
+	<td class="summary">获取GGA语句中度分格式的经纬度信息</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getUtcTime">
+    getUtcTime ()
+    </a></td>
+	<td class="summary">获取RMC语句中的UTC时间
+ 只有同时满足如下两个条件，返回值才有效
+ 1、开启了GPS，并且定位成功
+ 2、调用setParseItem接口，第一个参数设置为true</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getSep">
+    getSep ()
+    </a></td>
+	<td class="summary">获取定位使用的大地高</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getSateSn">
+    getSateSn ()
+    </a></td>
+	<td class="summary">获取GSA语句中的可见卫星号
+ 只有同时满足如下两个条件，返回值才有效
+ 1、开启了GPS，并且定位成功
+ 2、调用setParseItem接口，第三个参数设置为true</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getGsv">
+    getGsv ()
+    </a></td>
+	<td class="summary">获取GSV语句中的可见卫星的信噪比
+ 只有同时满足如下两个条件，返回值才有效
+ 1、开启了GPS，并且定位成功
+ 2、调用setParseItem接口，第二个参数设置为true</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#setParseItem">
+    setParseItem (<strong  style="color: gray;">[utcTime=nil]</strong><strong  style="color: gray;">[, gsv=nil]</strong><strong  style="color: gray;">[, gsaId=nil]</strong>)
+    </a></td>
+	<td class="summary">设置是否需要解析的字段</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#DEFAULT">
+    DEFAULT
+    </a></td>
+	<td class="summary">GPS应用模式1.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#TIMERORSUC">
+    TIMERORSUC
+    </a></td>
+	<td class="summary">GPS应用模式2.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#TIMER">
+    TIMER
+    </a></td>
+	<td class="summary">GPS应用模式3.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "open"></a>
+    <strong  style="color: red;">
+    open (mode, para)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">打开一个“GPS应用”
+ “GPS应用”：指的是使用GPS功能的一个应用
+ 例如，假设有如下3种需求，要打开GPS，则一共有3个“GPS应用”：
+ “GPS应用1”：每隔1分钟打开一次GPS
+ “GPS应用2”：设备发生震动时打开GPS
+ “GPS应用3”：收到一条特殊短信时打开GPS
+ 只有所有“GPS应用”都关闭了，才会去真正关闭GPS
+ 每个“GPS应用”打开或者关闭GPS时，最多有4个参数，其中 GPS应用模式和GPS应用标记 共同决定了一个唯一的“GPS应用”：
+ 1、GPS应用模式(必选)
+ 2、GPS应用标记(必选)
+ 3、GPS开启最大时长[可选]
+ 4、回调函数[可选]
+ 例如gpsHxxt.open(gpsHxxt.TIMERORSUC,{tag="TEST",val=120,cb=testGpsCb})
+ gpsHxxt.TIMERORSUC为GPS应用模式，"TEST"为GPS应用标记，120秒为GPS开启最大时长，testGpsCb为回调函数</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">mode</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">GPS应用模式，支持gpsHxxt.DEFAULT，gpsHxxt.TIMERORSUC，gpsHxxt.TIMER三种</pre>
+        </li>
+        <li><span class="parameter">para</span>
+        <pre class="example">table类型，GPS应用参数
+               para.tag：string类型，GPS应用标记
+               para.val：number类型，GPS应用开启最大时长，mode参数为gpsHxxt.TIMERORSUC或者gpsHxxt.TIMER时，此值才有意义
+               para.cb：GPS应用结束时的回调函数，回调函数的调用形式为para.cb(para.tag)</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">nil</pre></il>
+    </ul>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../modules/gpsHxxt.html#DEFAULT">DEFAULT</a></li>
+         <li><a href="../modules/gpsHxxt.html#TIMERORSUC">TIMERORSUC</a></li>
+         <li><a href="../modules/gpsHxxt.html#TIMER">TIMER</a></li>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.open(gpsHxxt.DEFAULT,{tag=<span class="string">"TEST1"</span>,cb=test1Cb})</pre></il>
+        <li><pre class="example">gpsHxxt.open(gpsHxxt.TIMERORSUC,{tag=<span class="string">"TEST2"</span>,val=<span class="number">60</span>,cb=test2Cb})</pre></il>
+        <li><pre class="example">gpsHxxt.open(gpsHxxt.TIMER,{tag=<span class="string">"TEST3"</span>,val=<span class="number">120</span>,cb=test3Cb})</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "close"></a>
+    <strong  style="color: red;">
+    close (mode, para)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">关闭一个“GPS应用”
+ 只是从逻辑上关闭一个GPS应用，并不一定真正关闭GPS，是有所有的GPS应用都处于关闭状态，才回去真正关闭GPS</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">mode</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">GPS应用模式，支持gpsHxxt.DEFAULT，gpsHxxt.TIMERORSUC，gpsHxxt.TIMER三种</pre>
+        </li>
+        <li><span class="parameter">para</span>
+        <pre class="example">table类型，GPS应用参数
+               para.tag：string类型，GPS应用标记
+               para.val：number类型，GPS应用开启最大时长，mode参数为gpsHxxt.TIMERORSUC或者gpsHxxt.TIMER时，此值才有意义；使用close接口时，不需要传入此参数
+               para.cb：GPS应用结束时的回调函数，回调函数的调用形式为para.cb(para.tag)；使用close接口时，不需要传入此参数</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">nil</pre></il>
+    </ul>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../modules/gpsHxxt.html#open">open</a></li>
+         <li><a href="../modules/gpsHxxt.html#DEFAULT">DEFAULT</a></li>
+         <li><a href="../modules/gpsHxxt.html#TIMERORSUC">TIMERORSUC</a></li>
+         <li><a href="../modules/gpsHxxt.html#TIMER">TIMER</a></li>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">GPS应用模式和GPS应用标记唯一确定一个“GPS应用”，调用本接口关闭时，mode和para.tag要和gpsHxxt.open打开一个“GPS应用”时传入的mode和para.tag保持一致</pre></il>
+        <li><pre class="example">gpsHxxt.close(gpsHxxt.DEFAULT,{tag=<span class="string">"TEST1"</span>})</pre></il>
+        <li><pre class="example">gpsHxxt.close(gpsHxxt.TIMERORSUC,{tag=<span class="string">"TEST2"</span>})</pre></il>
+        <li><pre class="example">gpsHxxt.close(gpsHxxt.TIMER,{tag=<span class="string">"TEST3"</span>})</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "closeAll"></a>
+    <strong  style="color: red;">
+    closeAll ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">关闭所有“GPS应用”</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">nil</pre></il>
+    </ul>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../modules/gpsHxxt.html#open">open</a></li>
+         <li><a href="../modules/gpsHxxt.html#DEFAULT">DEFAULT</a></li>
+         <li><a href="../modules/gpsHxxt.html#TIMERORSUC">TIMERORSUC</a></li>
+         <li><a href="../modules/gpsHxxt.html#TIMER">TIMER</a></li>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.closeAll()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "isActive"></a>
+    <strong  style="color: red;">
+    isActive (mode, para)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">判断一个“GPS应用”是否处于激活状态</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">mode</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">GPS应用模式，支持gpsHxxt.DEFAULT，gpsHxxt.TIMERORSUC，gpsHxxt.TIMER三种</pre>
+        </li>
+        <li><span class="parameter">para</span>
+        <pre class="example">table类型，GPS应用参数
+               para.tag：string类型，GPS应用标记
+               para.val：number类型，GPS应用开启最大时长，mode参数为gpsHxxt.TIMERORSUC或者gpsHxxt.TIMER时，此值才有意义；使用isActive接口时，不需要传入此参数
+               para.cb：GPS应用结束时的回调函数，回调函数的调用形式为para.cb(para.tag)；使用isActive接口时，不需要传入此参数</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">bool result，处于激活状态返回true，否则返回nil</pre></il>
+    </ul>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="../modules/gpsHxxt.html#open">open</a></li>
+         <li><a href="../modules/gpsHxxt.html#DEFAULT">DEFAULT</a></li>
+         <li><a href="../modules/gpsHxxt.html#TIMERORSUC">TIMERORSUC</a></li>
+         <li><a href="../modules/gpsHxxt.html#TIMER">TIMER</a></li>
+    </ul>
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">GPS应用模式和GPS应用标记唯一确定一个“GPS应用”，调用本接口查询状态时，mode和para.tag要和gpsHxxt.open打开一个“GPS应用”时传入的mode和para.tag保持一致</pre></il>
+        <li><pre class="example">gpsHxxt.isActive(gpsHxxt.DEFAULT,{tag=<span class="string">"TEST1"</span>})</pre></il>
+        <li><pre class="example">gpsHxxt.isActive(gpsHxxt.TIMERORSUC,{tag=<span class="string">"TEST2"</span>})</pre></il>
+        <li><pre class="example">gpsHxxt.isActive(gpsHxxt.TIMER,{tag=<span class="string">"TEST3"</span>})</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "setPowerCbFnc"></a>
+    <strong  style="color: red;">
+    setPowerCbFnc (cbFnc)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">设置GPS模块供电控制的回调函数
+ 如果使用的是Air800，或者供电控制使用的是LDO_VCAM，则打开GPS应用前不需要调用此接口进行设置
+ 否则在调用gpsHxxt.open前，使用此接口，传入自定义的供电控制函数cbFnc，GPS开启时，gpsHxxt.lua自动执行cbFnc(true)，GPS关闭时，gpsHxxt.lua自动执行cbFnc(false)</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">cbFnc</span>
+        <pre class="example">function类型，用户自定义的GPS供电控制函数</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">nil</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.setPowerCbFnc(cbFnc)</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "setUart"></a>
+    <strong  style="color: red;">
+    setUart (id, baudrate, databits, parity, stopbits)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">设置GPS模块和GSM模块之间数据通信的串口参数
+ 如果使用的是Air800，或者使用的UART2(波特率115200，数据位8，无检验位，停止位1)，则打开GPS应用前不需要调用此接口进行设置
+ 否则在调用gpsHxxt.open前，使用此接口，传入UART参数</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">id</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">UART ID，支持1和2，1表示UART1，2表示UART2</pre>
+        </li>
+        <li><span class="parameter">baudrate</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">波特率，支持1200,2400,4800,9600,10400,14400,19200,28800,38400,57600,76800,115200,230400,460800,576000,921600,1152000,4000000</pre>
+        </li>
+        <li><span class="parameter">databits</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">数据位，支持7,8</pre>
+        </li>
+        <li><span class="parameter">parity</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">校验位，支持uart.PAR_NONE,uart.PAR_EVEN,uart.PAR_ODD</pre>
+        </li>
+        <li><span class="parameter">stopbits</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">停止位，支持uart.STOP_1,uart.STOP_2</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">nil</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.setUart(<span class="number">2</span>,<span class="number">115200</span>,<span class="number">8</span>,uart.PAR_NONE,uart.STOP_1)</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "setNmeaMode"></a>
+    <strong  style="color: red;">
+    setNmeaMode (mode, cbFnc)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">设置NMEA数据处理模式.
+ 如果不调用此接口配置，则默认仅gpsHxxt.lua内部处理NMEA数据</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">mode</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">NMEA数据处理模式，0表示仅gpsHxxt.lua内部处理，1表示仅用户自己处理，2表示gpsHxxt.lua和用户同时处理</pre>
+        </li>
+        <li><span class="parameter">cbFnc</span>
+        <pre class="example">function类型，用户处理一条NMEA数据的回调函数，mode为1和2时，此值才有意义</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">nil</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.setNmeaMode(<span class="number">0</span>)</pre></il>
+        <li><pre class="example">gpsHxxt.setNmeaMode(<span class="number">1</span>,cbFnc)</pre></il>
+        <li><pre class="example">gpsHxxt.setNmeaMode(<span class="number">2</span>,cbFnc)</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "setRunMode"></a>
+    <strong  style="color: red;">
+    setRunMode (mode, runTm, sleepTm)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">设置GPS模块的运行模式.
+ 如果不调用此接口配置，则默认为正常运行模式</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">mode</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">运行模式
+ 0：正常运行模式
+ 1：周期超低功耗跟踪模式
+ 2：周期低功耗模式
+ 4：直接进入超低功耗跟踪模式
+ 8：自动低功耗模式，可以通过串口唤醒
+ 9：自动超低功耗跟踪模式，需要force on来唤醒</pre>
+        </li>
+        <li><span class="parameter">runTm</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">单位毫秒，mode为0时表示NEMA数据的上报间隔，mode为1或者2时表示运行时长，其余mode时此值无意义</pre>
+        </li>
+        <li><span class="parameter">sleepTm</span>
+            <span class="types"><span class="type">number</span></span>
+        <pre class="example">单位毫秒，mode为1或者2时表示运行时长，其余mode时此值无意义</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">nil</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.setRunMode(<span class="number">0</span>,<span class="number">1000</span>)</pre></il>
+        <li><pre class="example">gpsHxxt.setRunMode(<span class="number">1</span>,<span class="number">5000</span>,<span class="number">2000</span>)</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "setLocationFilter"></a>
+    <strong  style="color: red;">
+    setLocationFilter (<strong  style="color: green;">[seconds=0]</strong>)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">设置GPS定位成功后经纬度的过滤时间.</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">seconds</span>
+            <span class="types"><span class="type">number</span></span>
+         [<em>此参数可选，默认值为：</em> 0]
+        <pre class="example">单位秒，GPS定位成功后，丢弃前seconds秒的位置信息</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">nil</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.setLocationFilter(<span class="number">2</span>)</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "isOpen"></a>
+    <strong  style="color: red;">
+    isOpen ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取GPS模块是否处于开启状态</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">bool result，true表示开启状态，false或者nil表示关闭状态</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.isOpen()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "isFix"></a>
+    <strong  style="color: red;">
+    isFix ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取GPS模块是否定位成功</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">bool result，true表示定位成功，false或者nil表示定位失败</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.isFix()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "isOnece"></a>
+    <strong  style="color: red;">
+    isOnece ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取GPS模块是否首次定位成功过</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">bool result，true表示曾经定位成功</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.isOnece()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getLocation"></a>
+    <strong  style="color: red;">
+    getLocation (<strong  style="color: green;">[typ=nil]</strong>)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取度格式的经纬度信息</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">typ</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         [<em>此参数可选，默认值为：</em> nil]
+        <pre class="example">返回的经纬度格式，typ为"DEGREE_MINUTE"时表示返回度分格式，其余表示返回度格式</pre>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example"> table location
+ 例如typ为"DEGREE_MINUTE"时返回{lngType="E",lng="12128.44954",latType="N",lat="3114.50931"}
+ 例如typ不是"DEGREE_MINUTE"时返回{lngType="E",lng="121.123456",latType="N",lat="31.123456"}
+ lngType：string类型，表示经度类型，取值"E"，"W"
+ lng：string类型，表示度格式的经度值，无效时为""
+ latType：string类型，表示纬度类型，取值"N"，"S"
+ lat：string类型，表示度格式的纬度值，无效时为""</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.getLocation()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getAltitude"></a>
+    <strong  style="color: red;">
+    getAltitude ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取海拔</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">number altitude，海拔，单位米</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.getAltitude()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getSpeed"></a>
+    <strong  style="color: red;">
+    getSpeed ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取速度</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        <pre class="example">number kmSpeed，第一个返回值为公里每小时的速度</pre></li>
+        <li>
+        <pre class="example">number nmSpeed，第二个返回值为海里每小时的速度</pre></li>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.getSpeed()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getOrgSpeed"></a>
+    <strong  style="color: red;">
+    getOrgSpeed ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取原始速度,字符串带浮点</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">number speed 海里每小时的速度</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.getOrgSpeed()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getCourse"></a>
+    <strong  style="color: red;">
+    getCourse ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取方向角</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">number course，方向角</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.getCourse()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getViewedSateCnt"></a>
+    <strong  style="color: red;">
+    getViewedSateCnt ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取可见卫星的个数</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">number count，可见卫星的个数</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.getViewedSateCnt()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getUsedSateCnt"></a>
+    <strong  style="color: red;">
+    getUsedSateCnt ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取定位使用的卫星个数</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">number count，定位使用的卫星个数</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.getUsedSateCnt()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getGgaloc"></a>
+    <strong  style="color: red;">
+    getGgaloc ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取GGA语句中度分格式的经纬度信息</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        <pre class="example">string lng，度分格式的经度值(dddmm.mmmm)，西经会添加一个-前缀，无效时为""；例如"12112.3456"表示东经121度12.3456分，"-12112.3456"表示西经121度12.3456分</pre></li>
+        <li>
+        <pre class="example">string lat，度分格式的纬度值(ddmm.mmmm)，南纬会添加一个-前缀，无效时为""；例如"3112.3456"表示北纬31度12.3456分，"-3112.3456"表示南纬31度12.3456分</pre></li>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.getGgaloc()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getUtcTime"></a>
+    <strong  style="color: red;">
+    getUtcTime ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取RMC语句中的UTC时间
+ 只有同时满足如下两个条件，返回值才有效
+ 1、开启了GPS，并且定位成功
+ 2、调用setParseItem接口，第一个参数设置为true</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">table utcTime，UTC时间，nil表示无效，例如{year=2018,month=4,day=24,hour=11,min=52,sec=10}</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.getUtcTime()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getSep"></a>
+    <strong  style="color: red;">
+    getSep ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取定位使用的大地高</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">number sep，大地高</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.getSep()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getSateSn"></a>
+    <strong  style="color: red;">
+    getSateSn ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取GSA语句中的可见卫星号
+ 只有同时满足如下两个条件，返回值才有效
+ 1、开启了GPS，并且定位成功
+ 2、调用setParseItem接口，第三个参数设置为true</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">string viewedSateId，可用卫星号，""表示无效</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.getSateSn()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "getGsv"></a>
+    <strong  style="color: red;">
+    getGsv ()
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">获取GSV语句中的可见卫星的信噪比
+ 只有同时满足如下两个条件，返回值才有效
+ 1、开启了GPS，并且定位成功
+ 2、调用setParseItem接口，第二个参数设置为true</pre>
+
+
+
+    <h3>Returns:</h3>
+    <ul>
+        <li>
+        <pre class="example">string gsv，信噪比</pre></il>
+    </ul>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.getGsv()</pre></il>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "setParseItem"></a>
+    <strong  style="color: red;">
+    setParseItem (<strong  style="color: green;">[utcTime=nil]</strong><strong  style="color: green;">[, gsv=nil]</strong><strong  style="color: green;">[, gsaId=nil]</strong>)
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">设置是否需要解析的字段</pre>
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">utcTime</span>
+            <span class="types"><span class="type">bool</span></span>
+         [<em>此参数可选，默认值为：</em> nil]
+        <pre class="example">是否解析RMC语句中的UTC时间，true表示解析，false或者nil不解析</pre>
+        </li>
+        <li><span class="parameter">gsv</span>
+            <span class="types"><span class="type">bool</span></span>
+         [<em>此参数可选，默认值为：</em> nil]
+        <pre class="example">是否解析GSV语句，true表示解析，false或者nil不解析</pre>
+        </li>
+        <li><span class="parameter">gsaId</span>
+            <span class="types"><span class="type">bool</span></span>
+         [<em>此参数可选，默认值为：</em> nil]
+        <pre class="example">是否解析GSA语句中的卫星ID，true表示解析，false或者nil不解析</pre>
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <li><pre class="example">gpsHxxt.setParseItem(<span class="keyword">true</span>,<span class="keyword">true</span>,<span class="keyword">true</span>)</pre></il>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "DEFAULT"></a>
+    <strong  style="color: red;">
+    DEFAULT
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">GPS应用模式1.
+<p> 打开GPS后，GPS定位成功时，如果有回调函数，会调用回调函数
+<p> 使用此应用模式调用gpsHxxt.open打开的“GPS应用”，必须主动调用gpsHxxt.close或者gpsHxxt.closeAll才能关闭此“GPS应用”,主动关闭时，即使有回调函数，也不会调用回调函数</pre>
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "TIMERORSUC"></a>
+    <strong  style="color: red;">
+    TIMERORSUC
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">GPS应用模式2.
+<p> 打开GPS后，如果在GPS开启最大时长到达时，没有定位成功，如果有回调函数，会调用回调函数，然后自动关闭此“GPS应用”
+<p> 打开GPS后，如果在GPS开启最大时长内，定位成功，如果有回调函数，会调用回调函数，然后自动关闭此“GPS应用”
+<p> 打开GPS后，在自动关闭此“GPS应用”前，可以调用gpsHxxt.close或者gpsHxxt.closeAll主动关闭此“GPS应用”，主动关闭时，即使有回调函数，也不会调用回调函数</pre>
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "TIMER"></a>
+    <strong  style="color: red;">
+    TIMER
+    </strong>
+    </dt>
+    <dd>
+    <pre class="example"  style="color: red;">GPS应用模式3.
+<p> 打开GPS后，在GPS开启最大时长时间到达时，无论是否定位成功，如果有回调函数，会调用回调函数，然后自动关闭此“GPS应用”
+<p> 打开GPS后，在自动关闭此“GPS应用”前，可以调用gpsHxxt.close或者gpsHxxt.closeAll主动关闭此“GPS应用”，主动关闭时，即使有回调函数，也不会调用回调函数</pre>
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2021-08-02 13:53:19 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
+

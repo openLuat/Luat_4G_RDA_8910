@@ -14,6 +14,8 @@ local function init()
     rtos.on(rtos.MSG_BLUETOOTH, function(msg)
         if msg.event == btcore.MSG_OPEN_CNF then
             sys.publish("BT_OPEN", msg.result) --蓝牙打开成功
+        elseif msg.event == btcore.MSG_CLOSE_CNF then
+            log.info("bt", "ble close") --蓝牙关闭成功
         elseif msg.event == btcore.MSG_BT_HFP_CONNECT_IND then
             sys.publish("BT_HFP_CONNECT_IND", msg.result) --hfp连接成功
 		elseif msg.event == btcore.MSG_BT_HFP_DISCONNECT_IND then

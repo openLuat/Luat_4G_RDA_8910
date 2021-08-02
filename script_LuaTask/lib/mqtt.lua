@@ -153,13 +153,13 @@ mqttc.__index = mqttc
 -- @string[opt=""] password 密码，密码为空配置为""或者nil
 -- @number[opt=1] cleanSession 1/0
 -- @table[opt=nil] will 遗嘱参数，格式为{qos=, retain=, topic=, payload=}
--- @string[opt="3.1.1"] version MQTT版本号
+-- @string[opt="3.1.1"] version MQTT版本号，仅支持"3.1"和"3.1.1"
 -- @return table mqttc client实例
 -- @usage
 -- mqttc = mqtt.client("clientid-123")
 -- mqttc = mqtt.client("clientid-123",200)
 -- mqttc = mqtt.client("clientid-123",nil,"user","password")
--- mqttc = mqtt.client("clientid-123",nil,"user","password",nil,nil,"3.1")
+-- mqttc = mqtt.client("clientid-123",nil,"user","password",nil,{qos=0,retain=0,topic="willTopic",payload="willTopic"},"3.1")
 function client(clientId, keepAlive, username, password, cleanSession, will, version)
     local o = {}
     local packetId = 1
@@ -309,7 +309,7 @@ end
 --     clientKey = "client.key", --客户端私钥文件(Base64编码 X.509格式)
 --     clientPassword = "123456", --客户端证书文件密码[可选]
 -- }
--- @number[opt=120] timeout 可选参数，连接超时时间，单位秒
+-- @number[opt=120] timeout 可选参数，socket连接超时时间，单位秒
 -- @return result true表示成功，false或者nil表示失败
 -- @usage mqttc = mqtt.client("clientid-123", nil, nil, false); mqttc:connect("mqttserver.com", 1883, "tcp", 5)
 function mqttc:connect(host, port, transport, cert, timeout)
@@ -460,12 +460,24 @@ end
 -- @number timeout 接收超时时间，单位毫秒
 -- @string[opt=nil] msg 可选参数，控制socket所在的线程退出recv阻塞状态
 -- @return result 数据接收结果，true表示成功，false表示失败
--- @return data 如果result为true，表示服务器发过来的包；如果result为false，表示错误信息，超时失败时为"timeout"
--- @return param msg控制退出时，返回msg的字符串
+-- @return data 
+--                如果result为true，表示服务器发过来的mqtt包
+--
+--                如果result为false，超时失败,data为"timeout"
+--                如果result为false，msg控制退出，data为msg的字符串
+--                如果result为false，socket连接被动断开控制退出，data为"CLOSED"
+--                如果result为false，PDP断开连接控制退出，data为"IP_ERROR_IND"
+--
+--                如果result为false，mqtt不处于连接状态，data为nil
+--                如果result为false，收到了PUBLISH报文，发送PUBACK或者PUBREC报文失败，data为nil
+--                如果result为false，收到了PUBREC报文，发送PUBREL报文失败，data为nil
+--                如果result为false，收到了PUBREL报文，发送PUBCOMP报文失败，data为nil
+--                如果result为false，发送PINGREQ报文失败，data为nil
+-- @return param 如果是msg控制退出，param的值是msg的参数；其余情况无意义，为nil
 -- @usage
 -- true, packet = mqttc:receive(2000)
 -- false, error_message = mqttc:receive(2000)
--- false, msg, para = mqttc:receive(2000)
+-- false, msg, para = mqttc:receive(2000,"APP_SEND_DATA")
 function mqttc:receive(timeout, msg)
     if not self.connected then
         log.info("mqtt.client:receive", "not connected")

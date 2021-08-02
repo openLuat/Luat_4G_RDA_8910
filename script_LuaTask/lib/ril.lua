@@ -37,6 +37,8 @@ local NORESULT, NUMBERIC, SLINE, MLINE, STRING, SPECIAL = 0, 1, 2, 3, 4, 10
 local RILCMD = {
     ["+CSQ"] = 2,
     ["+CESQ"] = 2,
+    ["+CGMM"] = 2,
+    ["+RFTEMPERATURE"] =2,
     ["+MUID"] = 2,
     ["+CGSN"] = 1,
     ["+WISN"] = 4,
@@ -238,7 +240,7 @@ data：收到的数据
 ]]
 local function procatc(data)
     --if data:match("^%+EEMLTEINTER") or data:match("^%+EEMLTEINTRA") or data:match("^%+EEMUMTSINTER") or data:match("^%+EEMUMTSINTRA") then return end
-    --log.info("ril.proatc", data)
+    -- log.info("ril.proatc", data)
     --如果命令的应答是多行字符串格式
     if interdata and cmdtype == MLINE then
         --不出现OK\r\n，则认为应答还未结束
